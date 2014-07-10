@@ -702,52 +702,52 @@ package body Mckae.XML.XPath.XIA is
       Split : Natural := 1;
       Query : String := Trim(XPath, Both);
 
-      Matchings : Node_Sets.Set;
       Total_Matchings : Node_Sets.Set;
-
    begin
       loop
-         Node_Sets.Clear(Matchings);
+         declare
+            Matchings : Node_Sets.Set;
+         begin
 
          -- The given node is either a document node or an element node
          --  within a document.
-         Starting_Node := N;
+            Starting_Node := N;
 
-         if Query(Start) = '/' then
-            Starting_Node := Owner_Document(N);
-         end if;
+            if Query(Start) = '/' then
+               Starting_Node := Owner_Document(N);
+            end if;
 
-         if Starting_Node = null then
-            raise Inappropriate_Node;
-         end if;
+            if Starting_Node = null then
+               raise Inappropriate_Node;
+            end if;
 
-         Node_Sets.Append
-           (Matchings, (Self_Axis, Starting_Node));
+            Node_Sets.Append
+              (Matchings, (Self_Axis, Starting_Node));
 
          -- Process this as a concatenation of queries, i.e.,
          --  different queries separated by '|'.  Watch out for '|'s
          --  embedded in predicates!
-         Split := Query_Separator_Index(Query(Start .. Query'Last));
+            Split := Query_Separator_Index(Query(Start .. Query'Last));
 
-         if Split = 0 then
-            Evaluate_Location_Path(Query(Start .. Query'Last), Matchings);
-         else
-            Evaluate_Location_Path(Query(Start .. Split - 1), Matchings);
-         end if;
+            if Split = 0 then
+               Evaluate_Location_Path(Query(Start .. Query'Last), Matchings);
+            else
+               Evaluate_Location_Path(Query(Start .. Split - 1), Matchings);
+            end if;
 
          -- Merge the distinct sets
-         Node_Sets.Union(Total_Matchings, Matchings);
+            Node_Sets.Union(Total_Matchings, Matchings);
 
-         exit when Split = 0;
+            exit when Split = 0;
 
-         Start := Split + 1;
+            Start := Split + 1;
+         end;
       end loop;
 
       -- Iterate through the set of matchings, sorting them into
       --  document order and returning them as a Node_List;
       Finalize_Matchings(Total_Matchings, Xpath_Nodes);
 
-      Node_Sets.Clear(Matchings);
       Node_Sets.Clear(Total_Matchings);
 
       return Xpath_Nodes;
