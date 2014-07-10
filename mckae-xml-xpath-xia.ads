@@ -39,7 +39,7 @@
 
 with Dom.Core;
 
-package Mckae.XML.XPath.XIA is
+package McKae.XML.XPath.XIA is
 
    function XPath_Query
      (N     : Dom.Core.Node;
