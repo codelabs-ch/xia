@@ -1,5 +1,5 @@
 --  Copyright 1994 Grady Booch
---  Copyright 1998-2002 Simon Wright <simon@pushface.org>
+--  Copyright 1998-2014 Simon Wright <simon@pushface.org>
 
 --  This package is free software; you can redistribute it and/or
 --  modify it under terms of the GNU General Public License as
@@ -20,24 +20,31 @@
 --  exception does not however invalidate any other reasons why the
 --  executable file might be covered by the GNU Public License.
 
---  $RCSfile: bc-containers-collections-ordered.ads,v $
---  $Revision: 1.4.2.1 $
---  $Date: 2002/12/29 12:22:36 $
---  $Author: simon $
-
 generic
+
    with function "<" (L, R : Item) return Boolean is <>;
+   --  Must define a strict ordering; if A "<" B and B "<" C, A must
+   --  be "<" C. If A is not "<" B and B is not "<" A, A and B are
+   --  said to be equivalent (they need not be "=").
+
 package BC.Containers.Collections.Ordered is
+
+   pragma Preelaborate;
 
    type Abstract_Ordered_Collection
       is abstract new Abstract_Collection with private;
 
    --  An ordered collection denotes a sorted indexed collection of
    --  items, drawn from some well-defined universe. An ordered
-   --  collection may contain duplicate items; it owns a copy of each
-   --  item.
+   --  collection may contain duplicate (equivalent) items; it owns a
+   --  copy of each item.
 
 private
+
+   --  Suppress "unreferenced" warnings here (GNAT 5.02). Can't use
+   --  pragma Unreferenced, because then we get warnings in child
+   --  packages.
+   pragma Warnings (Off, "<");
 
    type Abstract_Ordered_Collection
       is abstract new Abstract_Collection with null record;

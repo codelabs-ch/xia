@@ -1,5 +1,5 @@
 --  Copyright 1994 Grady Booch
---  Copyright 1998-2002 Simon Wright <simon@pushface.org>
+--  Copyright 1998-2014 Simon Wright <simon@pushface.org>
 
 --  This package is free software; you can redistribute it and/or
 --  modify it under terms of the GNU General Public License as
@@ -20,23 +20,19 @@
 --  exception does not however invalidate any other reasons why the
 --  executable file might be covered by the GNU Public License.
 
---  $RCSfile: bc-support-hash_tables.adb,v $
---  $Revision: 1.12.2.6 $
---  $Date: 2002/12/26 14:48:12 $
---  $Author: simon $
-
-with Ada.Exceptions;
-with BC.Support.Exceptions;
-
 package body BC.Support.Hash_Tables is
 
-
-   package BSE renames BC.Support.Exceptions;
-   procedure Assert
-   is new BSE.Assert ("BC.Support.Hash_Tables");
-
-
    package body Tables is
+
+
+      pragma Warnings
+        (Off, "abstract subprogram is not dispatching or overriding*");
+      pragma Warnings (Off, "function ""="" is not referenced");
+      function "=" (L, R : Items.Item) return Boolean is abstract;
+      --  Make sure we don't use any old equality.
+      pragma Warnings
+        (On, "abstract subprogram is not dispatching or overriding*");
+      pragma Warnings (On, "function ""="" is not referenced");
 
 
       function "=" (L, R : Table) return Boolean is
@@ -48,17 +44,12 @@ package body BC.Support.Hash_Tables is
                   declare
                      This_Item : Items.Item renames
                        Items.Item_At (L.Items (B), Index);
-                     function "=" (L, R : Values.Value) return Boolean
-                       renames Values."=";
-                     --  There seems to be a problem wrt the 'function "="
-                     --  (L, R : Values.Value) return Boolean"'. This version
-                     --  works with GNAT 3.12, OA & APEX. Other versions (eg,
-                     --  'use type Values.Value', 'Values."="') cause
-                     --  problems with one or the other.
                   begin
                      if not Is_Bound (R, This_Item)
-                       or else not (Values.Item_At (L.Values (B), Index)
-                                    = Value_Of (R, This_Item)) then
+                       or else not Values.Eq
+                                    (Values.Item_At (L.Values (B), Index),
+                                     Value_Of (R, This_Item))
+                     then
                         return False;
                      end if;
                   end;
@@ -85,10 +76,9 @@ package body BC.Support.Hash_Tables is
          Bucket : constant Positive
            := (Items.Hash (I) mod T.Number_Of_Buckets) + 1;
       begin
-         Assert (Items.Location (T.Items (Bucket), I, 1) = 0,
-                 BC.Duplicate'Identity,
-                 "Bind",
-                 BSE.Duplicate);
+         if Items.Location (T.Items (Bucket), I, 1) /= 0 then
+            raise BC.Duplicate;
+         end if;
          Items.Insert (T.Items (Bucket), I);
          Values.Insert (T.Values (Bucket), V);
          T.Size := T.Size + 1;
@@ -100,10 +90,9 @@ package body BC.Support.Hash_Tables is
            := (Items.Hash (I) mod T.Number_Of_Buckets) + 1;
          Index : constant Natural := Items.Location (T.Items (Bucket), I, 1);
       begin
-         Assert (Index /= 0,
-                 BC.Not_Found'Identity,
-                 "Rebind",
-                 BSE.Missing);
+         if Index = 0 then
+            raise BC.Not_Found;
+         end if;
          Values.Replace (T.Values (Bucket), Index, V);
       end Rebind;
 
@@ -113,10 +102,9 @@ package body BC.Support.Hash_Tables is
            := (Items.Hash (I) mod T.Number_Of_Buckets) + 1;
          Index : constant Natural := Items.Location (T.Items (Bucket), I, 1);
       begin
-         Assert (Index /= 0,
-                 BC.Not_Found'Identity,
-                 "Unbind",
-                 BSE.Missing);
+         if Index = 0 then
+            raise BC.Not_Found;
+         end if;
          Items.Remove (T.Items (Bucket), Index);
          Values.Remove (T.Values (Bucket), Index);
          T.Size := T.Size - 1;
@@ -142,10 +130,9 @@ package body BC.Support.Hash_Tables is
            := (Items.Hash (I) mod T.Number_Of_Buckets) + 1;
          Index : constant Natural := Items.Location (T.Items (Bucket), I, 1);
       begin
-         Assert (Index /= 0,
-                 BC.Not_Found'Identity,
-                 "Value_Of",
-                 BSE.Missing);
+         if Index = 0 then
+            raise BC.Not_Found;
+         end if;
          return Values.Item_At (T.Values (Bucket), Index);
       end Value_Of;
 
@@ -167,9 +154,7 @@ package body BC.Support.Hash_Tables is
                end if;
                Bucket := Bucket + 1;
             end loop;
-            Ada.Exceptions.Raise_Exception
-              (Program_Error'Identity,
-               "BC.Support.Hash_Tables.Reset: no items found");
+            raise Hash_Table_Error;
          end if;
       end Reset;
 
@@ -187,11 +172,10 @@ package body BC.Support.Hash_Tables is
                                  Bucket : Positive;
                                  Index : Positive) return Items.Item_Ptr is
       begin
-         Assert (Bucket <= T.Number_Of_Buckets,
-                 BC.Not_Found'Identity,
-                 "Current_Item_Ptr",
-                 BSE.Missing);
-         return Items.Item_At (T.Items (Bucket), Index);
+         if Bucket > T.Number_Of_Buckets then
+            raise BC.Not_Found;
+         end if;
+         return Items.Access_Item_At (T.Items (Bucket), Index);
       end Current_Item_Ptr;
 
 
@@ -199,11 +183,10 @@ package body BC.Support.Hash_Tables is
                                   Bucket : Positive;
                                   Index : Positive) return Values.Value_Ptr is
       begin
-         Assert (Bucket <= T.Number_Of_Buckets,
-                 BC.Not_Found'Identity,
-                 "Current_Value_Ptr",
-                 BSE.Missing);
-         return Values.Item_At (T.Values (Bucket), Index);
+         if Bucket > T.Number_Of_Buckets then
+            raise BC.Not_Found;
+         end if;
+         return Values.Access_Item_At (T.Values (Bucket), Index);
       end Current_Value_Ptr;
 
 
@@ -211,10 +194,9 @@ package body BC.Support.Hash_Tables is
                                 Bucket : in out Positive;
                                 Index : in out  Positive) is
       begin
-         Assert (Bucket <= T.Number_Of_Buckets,
-                 BC.Not_Found'Identity,
-                 "Delete_Item_At",
-                 BSE.Missing);
+         if Bucket > T.Number_Of_Buckets then
+            raise BC.Not_Found;
+         end if;
          Items.Remove (T.Items (Bucket), Index);
          Values.Remove (T.Values (Bucket), Index);
          if Index > Items.Length (T.Items (Bucket)) then
@@ -235,10 +217,9 @@ package body BC.Support.Hash_Tables is
                       Bucket : in out Positive;
                       Index : in out  Positive) is
       begin
-         Assert (Bucket <= T.Number_Of_Buckets,
-                 BC.Not_Found'Identity,
-                 "Next",
-                 BSE.Missing);
+         if Bucket > T.Number_Of_Buckets then
+            raise BC.Not_Found;
+         end if;
          if Items.Length (T.Items (Bucket)) > Index then
             Index := Index + 1;
          else

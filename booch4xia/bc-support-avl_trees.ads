@@ -21,22 +21,37 @@
 --  exception does not however invalidate any other reasons why the
 --  executable file might be covered by the GNU Public License.
 
-with BC.Support.AVL_Trees;
+with Ada.Finalization;
 with System.Storage_Pools;
 
 generic
+   type Item is private;
+   with function "=" (L, R : Item) return Boolean is <>;
    with function "<" (L, R : Item) return Boolean is <>;
    Storage : in out System.Storage_Pools.Root_Storage_Pool'Class;
-package BC.Containers.Trees.AVL is
+package BC.Support.AVL_Trees is
 
    pragma Preelaborate;
 
-   type AVL_Tree is new BC.Containers.Container with private;
+   type AVL_Node;
+   type AVL_Node_Ref is access AVL_Node;
+   for AVL_Node_Ref'Storage_Pool use Storage;
+
+   type Node_Balance is (Left, Middle, Right);
+
+   type AVL_Node is record
+      Element : Item;
+      Left, Right : AVL_Node_Ref;
+      Balance : Node_Balance := Middle;
+   end record;
+
+   type AVL_Tree is new Ada.Finalization.Controlled with record
+      Rep : AVL_Node_Ref;
+      Size : Natural := 0;
+   end record;
 
    function "=" (L, R : AVL_Tree) return Boolean;
    --  return True if both trees contain the same Elements.
-
-   function Null_Container return AVL_Tree;
 
    procedure Clear (T : in out AVL_Tree);
    --  Make the tree null and reclaim the storage associated with its items.
@@ -63,66 +78,8 @@ package BC.Containers.Trees.AVL is
    function Is_Member (T : AVL_Tree; Element : Item) return Boolean;
    --  Return True if and only if the item exists in the tree.
 
-   function New_Iterator (For_The_Tree : AVL_Tree) return Iterator'Class;
-   --  Return a reset Iterator bound to the specific tree.
+   procedure Adjust (T : in out AVL_Tree);
 
-   generic
-      with procedure Apply (Elem : in out Item);
-   procedure Access_Actual_Item (In_The_Tree : AVL_Tree;
-                                 Elem : Item;
-                                 Found : out Boolean);
-   --  If an Item "=" to Elem is present in the Tree, call Apply for
-   --  it and set Found to True; otherwise, set Found to False.
-   --  Apply MUST NOT alter the result of the ordering operation "<".
+   procedure Finalize (T : in out AVL_Tree);
 
-   -------------------------------------------------------------------
-   --  The  functionality of  Visit and  Modify is  also available  --
-   --  using the  standard Container generic. Note  that, as here,  --
-   --  the  Apply used  there MUST  NOT  alter the  result of  the  --
-   --  ordering operation "<".                                      --
-   -------------------------------------------------------------------
-
-   generic
-      with procedure Apply (Elem : in Item; OK : out Boolean);
-   procedure Visit (Over_The_Tree : AVL_Tree);
-   --  Call Apply with a copy of each Item in the Tree, in order. The
-   --  iteration will terminate early if Apply sets OK to False.
-
-   generic
-      with procedure Apply (Elem : in out Item; OK : out Boolean);
-   procedure Modify (Over_The_Tree : AVL_Tree);
-   --  Call Apply for each Item in the Tree, in order. The iteration will
-   --  terminate early if Apply sets OK to False.
-   --  Apply MUST NOT alter the result of the ordering operation "<".
-
-private
-
-   package Support is new BC.Support.AVL_Trees
-     (Item => Item,
-      "=" => "=",
-      "<" => "<",
-      Storage => Storage);
-
-   type AVL_Tree is new BC.Containers.Container with record
-      Rep : Support.AVL_Tree;
-   end record;
-
-   --  Iterator implementations.
-
-   type AVL_Tree_Iterator is new Iterator with record
-      Previous, Current : Support.AVL_Node_Ref;
-   end record;
-
-   procedure Reset (It : in out AVL_Tree_Iterator);
-
-   procedure Next (It : in out AVL_Tree_Iterator);
-
-   function Is_Done (It : AVL_Tree_Iterator) return Boolean;
-
-   function Current_Item (It : AVL_Tree_Iterator) return Item;
-
-   procedure Delete_Item_At (It : in out AVL_Tree_Iterator);
-
-   function Current_Item_Ptr (It : AVL_Tree_Iterator) return Item_Ptr;
-
-end BC.Containers.Trees.AVL;
+end BC.Support.AVL_Trees;

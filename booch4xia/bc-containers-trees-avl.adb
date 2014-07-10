@@ -1,6 +1,6 @@
 --  Copyright 1994 Grady Booch
 --  Copyright 1994-1997 David Weller
---  Copyright 1998-2002 Simon Wright <simon@pushface.org>
+--  Copyright 1998-2014 Simon Wright <simon@pushface.org>
 
 --  This package is free software; you can redistribute it and/or
 --  modify it under terms of the GNU General Public License as
@@ -21,432 +21,54 @@
 --  exception does not however invalidate any other reasons why the
 --  executable file might be covered by the GNU Public License.
 
---  $RCSfile: bc-containers-trees-avl.adb,v $
---  $Revision: 1.10.2.1 $
---  $Date: 2002/12/29 16:42:02 $
---  $Author: simon $
-
-with Ada.Unchecked_Deallocation;
+with System.Address_To_Access_Conversions;
 
 package body BC.Containers.Trees.AVL is
 
-   procedure Delete is
-      new Ada.Unchecked_Deallocation (AVL_Node, AVL_Node_Ref);
-
-   --  Supporting subprograms
-   procedure Purge (Node : in out AVL_Node_Ref);
-
-   procedure Search_Insert (T : in out AVL_Tree;
-                            Element : Item;
-                            Node : in out AVL_Node_Ref;
-                            Increased : in out Boolean;
-                            Inserted : out Boolean);
-
-   procedure Search_Delete (T : in out AVL_Tree;
-                            Element : Item;
-                            Node : in out AVL_Node_Ref;
-                            Decreased : in out Boolean;
-                            Deleted : out Boolean);
-
-   procedure Balance_Left (Node : in out AVL_Node_Ref;
-                           Decreased : in out Boolean);
-
-   procedure Balance_Right (Node : in out AVL_Node_Ref;
-                            Decreased : in out Boolean);
-
-   procedure Delete
-     (To_Be_Deleted, Candidate_Replacement : in out AVL_Node_Ref;
-      Decreased : in out Boolean);
-
-   function Search (T : AVL_Tree;
-                    Element : Item;
-                    Node : AVL_Node_Ref) return Boolean;
-
-   procedure Purge (Node : in out AVL_Node_Ref) is
-   begin
-      if Node /= null then
-         Purge (Node.Left);
-         Purge (Node.Right);
-         Delete (Node);
-      end if;
-   end Purge;
-
-   procedure Search_Insert (T : in out AVL_Tree;
-                            Element : Item;
-                            Node : in out AVL_Node_Ref;
-                            Increased : in out Boolean;
-                            Inserted : out Boolean) is
-      P1, P2 : AVL_Node_Ref;
-   begin
-      Inserted := True;
-      if Node = null then
-         Node := new AVL_Node'(Element => Element,
-                                     Left => null,
-                                     Right => null,
-                                     Balance => Middle);
-         Increased := True;
-      elsif Element < Node.Element then
-         Search_Insert (T, Element, Node.Left, Increased, Inserted);
-         if Increased then
-            case Node.Balance is
-               when Right =>
-                  Node.Balance := Middle;
-                  Increased := False;
-               when Middle =>
-                  Node.Balance := Left;
-               when Left =>
-                  P1 := Node.Left;
-                  if P1.Balance = Left then
-                     Node.Left := P1.Right;
-                     P1.Right := Node;
-                     Node.Balance := Middle;
-                     Node := P1;
-                  else
-                     P2 := P1.Right;
-                     P1.Right := P2.Left;
-                     P2.Left := P1;
-                     Node.Left := P2.Right;
-                     P2.Right := Node;
-                     if P2.Balance = Left then
-                        Node.Balance := Right;
-                     else
-                        Node.Balance := Middle;
-                     end if;
-                     if P2.Balance = Right then
-                        P1.Balance := Left;
-                     else
-                        P1.Balance := Middle;
-                     end if;
-                     Node := P2;
-                  end if;
-                  Node.Balance := Middle;
-                  Increased := False;
-            end case;
-         end if;
-      elsif Node.Element < Element then
-         Search_Insert (T, Element, Node.Right, Increased, Inserted);
-         if Increased then
-            case Node.Balance is
-               when Left =>
-                  Node.Balance := Middle;
-                  Increased := False;
-               when Middle =>
-                  Node.Balance := Right;
-               when Right =>
-                  P1 := Node.Right;
-                  if P1.Balance = Right then
-                     Node.Right := P1.Left;
-                     P1.Left := Node;
-                     Node.Balance := Middle;
-                     Node := P1;
-                  else
-                     P2 := P1.Left;
-                     P1.Left := P2.Right;
-                     P2.Right := P1;
-                     Node.Right := P2.Left;
-                     P2.Left := Node;
-                     if P2.Balance = Right then
-                        Node.Balance := Left;
-                     else
-                        Node.Balance := Middle;
-                     end if;
-                     if P2.Balance = Left then
-                        P1.Balance := Right;
-                     else
-                        P1.Balance := Middle;
-                     end if;
-                     Node := P2;
-                  end if;
-                  Node.Balance := Middle;
-                  Increased := False;
-            end case;
-         end if;
-      else
-         --  We need to cope with the case where elements _compare_
-         --  equal but their non-key data content has changed.
-         Node.Element := Element;
-         Inserted := False;
-      end if;
-   end Search_Insert;
-
-   procedure Balance_Left (Node : in out AVL_Node_Ref;
-                           Decreased : in out Boolean) is
-      P1, P2 : AVL_Node_Ref;
-      Balance1, Balance2 : Node_Balance;
-   begin
-      case Node.Balance is
-         when Left =>
-            Node.Balance := Middle;
-         when Middle =>
-            Node.Balance := Right;
-            Decreased := False;
-         when Right =>
-            P1 := Node.Right;
-            Balance1 := P1.Balance;
-            if Balance1 >= Middle then
-               Node.Right := P1.Left;
-               P1.Left := Node;
-               if Balance1 = Middle then
-                  Node.Balance := Right;
-                  P1.Balance := Left;
-                  Decreased := False;
-               else
-                  Node.Balance := Middle;
-                  P1.Balance := Middle;
-               end if;
-               Node := P1;
-            else
-               P2 := P1.Left;
-               Balance2 := P2.Balance;
-               P1.Left := P2.Right;
-               P2.Right := P1;
-               Node.Right := P2.Left;
-               P2.Left := Node;
-               if Balance2 = Right then
-                  Node.Balance := Left;
-               else
-                  Node.Balance := Middle;
-               end if;
-               if Balance2 = Left then
-                  P1.Balance := Right;
-               else
-                  P1.Balance := Middle;
-               end if;
-               Node := P2;
-               P2.Balance := Middle;
-            end if;
-      end case;
-   end Balance_Left;
-
-   procedure Balance_Right (Node : in out AVL_Node_Ref;
-                            Decreased : in out Boolean)  is
-      P1, P2 : AVL_Node_Ref;
-      Balance1, Balance2 : Node_Balance;
-   begin
-      case Node.Balance is
-         when Right =>
-            Node.Balance := Middle;
-         when Middle =>
-            Node.Balance := Left;
-            Decreased := False;
-         when Left =>
-            P1 := Node.Left;
-            Balance1 := P1.Balance;
-            if Balance1 <= Middle then
-               Node.Left := P1.Right;
-               P1.Right := Node;
-               if Balance1 = Middle then
-                  Node.Balance := Left;
-                  P1.Balance := Right;
-                  Decreased := False;
-               else
-                  Node.Balance := Middle;
-                  P1.Balance := Middle;
-               end if;
-               Node := P1;
-            else
-               P2 := P1.Right;
-               Balance2 := P2.Balance;
-               P1.Right := P2.Left;
-               P2.Left := P1;
-               Node.Left := P2.Right;
-               P2.Right := Node;
-               if Balance2 = Left then
-                  Node.Balance := Right;
-               else
-                  Node.Balance := Middle;
-               end if;
-               if Balance2 = Right then
-                  P1.Balance := Left;
-               else
-                  P1.Balance := Middle;
-               end if;
-               Node := P2;
-               P2.Balance := Middle;
-            end if;
-      end case;
-   end Balance_Right;
-
-   --  On entry, To_Be_Deleted is the node which contains the value
-   --  that is to be deleted. Candidate_Replacement starts off as the
-   --  left child of To_Be_Deleted, but the procedure recurses until
-   --  Candidate_Replacement is the rightmost (largest) child of the
-   --  left subtree of To_Be_Deleted.
-   --
-   --  The value at Candidate_Replacement is then transferred to the
-   --  node To_Be_Deleted, and the pointer To_Be_Deleted is made to
-   --  point to the rightmost child (so that that what eventually gets
-   --  deleted is that rightmost child).
-   --
-   --  The tree is rebalanced as the recursion unwinds.
-   procedure Delete
-     (To_Be_Deleted, Candidate_Replacement : in out AVL_Node_Ref;
-      Decreased : in out Boolean) is
-   begin
-      if Candidate_Replacement.Right /= null then
-         --  Recurse down the right branch
-         Delete (To_Be_Deleted, Candidate_Replacement.Right, Decreased);
-         if Candidate_Replacement.Left = null
-           and then Candidate_Replacement.Right = null then
-            Candidate_Replacement.Balance := Middle;
-         elsif Decreased then
-            Balance_Right (Candidate_Replacement, Decreased);
-         end if;
-      else
-         --  We've found the rightmost child.
-         --  Copy the value there to the node that contained the value
-         --  to be deleted.
-         To_Be_Deleted.Element := Candidate_Replacement.Element;
-         --  Replace the pointer to the node that contained the value
-         --  to be deleted with a pointer to the rightmost child of
-         --  the left subtree (no longer needed, and to be deleted by
-         --  the caller).
-         To_Be_Deleted := Candidate_Replacement;
-         --  Candidate_Replacement is the actual pointer in the parent
-         --  node; it needs to point to the left subtree, if any, of
-         --  the node that was the rightmost child and which we are
-         --  about to delete.
-         Candidate_Replacement := Candidate_Replacement.Left;
-         --  We've definitely reduced the depth.
-         Decreased := True;
-      end if;
-   end Delete;
-
-   procedure Search_Delete (T : in out AVL_Tree;
-                            Element : Item;
-                            Node : in out AVL_Node_Ref;
-                            Decreased : in out Boolean;
-                            Deleted : out Boolean) is
-      Q : AVL_Node_Ref;
-   begin
-      Deleted := False;
-      if Node /= null then
-         if Element < Node.Element then
-            Search_Delete (T, Element, Node.Left, Decreased, Deleted);
-            if Decreased then
-               Balance_Left (Node, Decreased);
-            end if;
-         elsif Node.Element < Element then
-            Search_Delete (T, Element, Node.Right, Decreased, Deleted);
-            if Decreased then
-               Balance_Right (Node, Decreased);
-            end if;
-         else
-            Q := Node;
-            Deleted := True;
-            if Q.Right = null then
-               Node := Q.Left;
-               Decreased := True;
-            elsif Q.Left = null then
-               Node := Q.Right;
-               Decreased := True;
-            else
-               Delete (Q, Q.Left, Decreased);
-               if Decreased then
-                  Balance_Left (Node, Decreased);
-               end if;
-            end if;
-            Delete (Q);
-         end if;
-      end if;
-   end Search_Delete;
-
-   function Search (T : AVL_Tree;
-                    Element : Item;
-                    Node : AVL_Node_Ref) return Boolean is
-   begin
-      if Node /= null then
-         if Node.Element = Element then
-            return True;
-         elsif Element < Node.Element then
-            return Search (T, Element, Node.Left);
-         else
-            return Search (T, Element, Node.Right);
-         end if;
-      else
-         return False;
-      end if;
-   end Search;
-
-   --  end supporting functions
-
    function "=" (L, R : AVL_Tree) return Boolean is
-      --  Once we know that the sizes are the same, we only need to
-      --  check that all members of L are in R, because we don't allow
-      --  duplicate members.
-      procedure Check_In_Right (Elem : in Item; Found : out Boolean);
-      procedure Compare is new Visit (Apply => Check_In_Right);
-      Are_Equal : Boolean := True;
-      procedure Check_In_Right (Elem : in Item; Found : out Boolean) is
-      begin
-         Found := Is_Member (R, Elem); -- to terminate early
-         if not Found then
-            Are_Equal := False;
-         end if;
-      end Check_In_Right;
    begin
-      if L.Size /= R.Size then
-         return False;
-      end if;
-      Compare (Over_The_Tree => L);
-      return Are_Equal;
+      return Support."=" (L.Rep, R.Rep);
    end "=";
 
    procedure Clear (T : in out AVL_Tree) is
    begin
-      Purge (T.Rep);
-      T.Size := 0;
+      Support.Clear (T.Rep);
    end Clear;
 
    procedure Insert (T : in out AVL_Tree;
                      Element : Item;
                      Not_Found : out Boolean) is
-      Increased : Boolean := False;
-      Result : Boolean;
    begin
-      Search_Insert (T, Element, T.Rep, Increased, Result);
-      if Result then
-         T.Size := T.Size + 1;
-         Not_Found := True;
-      else
-         Not_Found := False;
-      end if;
+      Support.Insert (T.Rep, Element, Not_Found);
    end Insert;
 
    procedure Delete
      (T : in out AVL_Tree; Element : Item; Found : out Boolean) is
-      Decreased : Boolean := False;
-      Result : Boolean;
    begin
-      Search_Delete (T, Element, T.Rep, Decreased, Result);
-      if Result then
-         T.Size := T.Size - 1;
-         Found := True;
-      else
-         Found := False;
-      end if;
+      Support.Delete (T.Rep, Element, Found);
    end Delete;
 
    function Extent (T : in AVL_Tree) return Natural is
    begin
-      return T.Size;
+      return T.Rep.Size;
    end Extent;
 
    function Is_Null (T : in AVL_Tree) return Boolean is
    begin
-      return T.Rep = null;
+      return Support.Is_Null (T.Rep);
    end Is_Null;
 
    function Is_Member (T : in AVL_Tree; Element : Item) return Boolean is
    begin
-      return Search (T, Element, T.Rep);
+      return Support.Is_Member (T.Rep, Element);
    end Is_Member;
 
    procedure Access_Actual_Item (In_The_Tree : AVL_Tree;
                                  Elem : Item;
                                  Found : out Boolean) is
-      procedure Access_Actual_Item (Node : AVL_Node_Ref);
-      procedure Access_Actual_Item (Node : AVL_Node_Ref) is
+      procedure Access_Actual_Item (Node : Support.AVL_Node_Ref);
+      procedure Access_Actual_Item (Node : Support.AVL_Node_Ref) is
+         use type Support.AVL_Node_Ref;
       begin
          if Node /= null then
             if Node.Element = Elem then
@@ -461,33 +83,14 @@ package body BC.Containers.Trees.AVL is
       end Access_Actual_Item;
    begin
       Found := False;
-      Access_Actual_Item (In_The_Tree.Rep);
+      Access_Actual_Item (In_The_Tree.Rep.Rep);
    end Access_Actual_Item;
-
-   --    function Traverse (Node : AVL_Node_Ref;
-   --                      Iter_Func : Iteration_Function) return Boolean is
-   --      Temp : AVL_Node_Ref;
-   --    begin
-   --      if Node /= null then
-   --        Temp := Node.Left;
-   --        if not Traverse (Temp, Iter_Func) then
-   --          return False;
-   --        end if;
-   --        if not Iter_Func (Temp.Element) then
-   --          return False;
-   --        end if;
-   --        Temp := Node.Right;
-   --        if not Traverse (Temp, Iter_Func) then
-   --          return False;
-   --        end if;
-   --      end if;
-   --      return True;
-   --    end Traverse;
 
    procedure Visit (Over_The_Tree : AVL_Tree) is
       Continue : Boolean := True;
-      procedure Visit (Node : AVL_Node_Ref);
-      procedure Visit (Node : AVL_Node_Ref) is
+      procedure Visit (Node : Support.AVL_Node_Ref);
+      procedure Visit (Node : Support.AVL_Node_Ref) is
+         use type Support.AVL_Node_Ref;
       begin
          if Node /= null then
             Visit (Node.Left);
@@ -502,13 +105,14 @@ package body BC.Containers.Trees.AVL is
          end if;
       end Visit;
    begin
-      Visit (Over_The_Tree.Rep);
+      Visit (Over_The_Tree.Rep.Rep);
    end Visit;
 
    procedure Modify (Over_The_Tree : AVL_Tree) is
       Continue : Boolean := True;
-      procedure Modify (Node : AVL_Node_Ref);
-      procedure Modify (Node : AVL_Node_Ref) is
+      procedure Modify (Node : Support.AVL_Node_Ref);
+      procedure Modify (Node : Support.AVL_Node_Ref) is
+         use type Support.AVL_Node_Ref;
       begin
          if Node /= null then
             Modify (Node.Left);
@@ -523,42 +127,100 @@ package body BC.Containers.Trees.AVL is
          end if;
       end Modify;
    begin
-      Modify (Over_The_Tree.Rep);
+      Modify (Over_The_Tree.Rep.Rep);
    end Modify;
 
-   procedure Initialize (T : in out AVL_Tree) is
-      pragma Warnings (Off, T);
+   function Null_Container return AVL_Tree is
+      Empty_Container : AVL_Tree;
+      pragma Warnings (Off, Empty_Container);
    begin
-      null;
-   end Initialize;
+      return Empty_Container;
+   end Null_Container;
 
-   procedure Adjust (T : in out AVL_Tree) is
-      New_Tree : AVL_Tree;
-      procedure Add (Elem : in Item; OK : out Boolean);
-      procedure Copy is new Visit (Apply => Add);
-      procedure Add (Elem : in Item; OK : out Boolean) is
-         Inserted : Boolean;
+   --  Iteration
+
+   package Address_Conversions
+   is new System.Address_To_Access_Conversions (AVL_Tree);
+
+   function New_Iterator (For_The_Tree : AVL_Tree) return Iterator'Class is
+      Result : AVL_Tree_Iterator;
+   begin
+      Result.For_The_Container :=
+        Container_Ptr (Address_Conversions.To_Pointer
+                         (For_The_Tree'Address));
+      Reset (Result);
+      return Result;
+   end New_Iterator;
+
+   procedure Reset (It : in out AVL_Tree_Iterator) is
+      This : Support.AVL_Node_Ref
+        := AVL_Tree (It.For_The_Container.all).Rep.Rep;
+      use type Support.AVL_Node_Ref;
+   begin
+      It.Previous := null;
+      It.Current := null;
+      while This /= null loop
+         It.Current := This;
+         This := This.Left;
+      end loop;
+   end Reset;
+
+   function Is_Done (It : AVL_Tree_Iterator) return Boolean is
+      use type Support.AVL_Node_Ref;
+   begin
+      return It.Current = null;
+   end Is_Done;
+
+   function Current_Item (It : AVL_Tree_Iterator) return Item is
+   begin
+      return It.Current.Element;
+   end Current_Item;
+
+   procedure Next (It : in out AVL_Tree_Iterator) is
+      procedure Visit (Node : Support.AVL_Node_Ref);
+      Found_Previous : Boolean := False;
+      Continue : Boolean := True;
+      procedure Visit (Node : Support.AVL_Node_Ref) is
+         use type Support.AVL_Node_Ref;
       begin
-         Insert (T => New_Tree, Element => Elem, Not_Found => Inserted);
-         --  XXX should test Inserted?
-         OK := True;
-      end Add;
+         if Node /= null then
+            Visit (Node.Left);
+            if not Continue then
+               return;
+            elsif Found_Previous then
+               It.Current := Node;
+               Continue := False;
+               return;
+            elsif Node = It.Previous then
+               Found_Previous := True;
+            end if;
+            Visit (Node.Right);
+         end if;
+      end Visit;
    begin
-      --  Create a deep copy of the representation
-      Copy (Over_The_Tree => T);
-      --  Replace the original representation with the copy
-      T.Rep := New_Tree.Rep;
-      --  Null out the spare reference to the copy (so that when
-      --  New_Tree gets finalized on exit from this procedure, we
-      --  don't Clear it down). NB, mustn't do a whole-record
-      --  assignment here or we'll end up with a recursive disaster).
-      New_Tree.Rep := null;
-      New_Tree.Size := 0;
-   end Adjust;
+      It.Previous := It.Current;
+      It.Current := null;
+      Visit (AVL_Tree (It.For_The_Container.all).Rep.Rep);
+   end Next;
 
-   procedure Finalize (T : in out AVL_Tree) is
+   procedure Delete_Item_At (It : in out AVL_Tree_Iterator) is
    begin
-      Clear (T);
-   end Finalize;
+      raise Not_Yet_Implemented;
+   end Delete_Item_At;
+
+   --  We can't take 'Access of non-aliased components. But if we
+   --  alias discriminated objects they become constrained - even if
+   --  the discriminant has a default.
+   package Allow_Element_Access
+   is new System.Address_To_Access_Conversions (Item);
+
+   function Current_Item_Ptr (It : AVL_Tree_Iterator) return Item_Ptr is
+   begin
+      if Is_Done (It) then
+         raise BC.Not_Found;
+      end if;
+      return Item_Ptr
+        (Allow_Element_Access.To_Pointer (It.Current.Element'Address));
+   end Current_Item_Ptr;
 
 end BC.Containers.Trees.AVL;

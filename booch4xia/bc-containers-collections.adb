@@ -1,5 +1,5 @@
 --  Copyright 1994 Grady Booch
---  Copyright 1998-2002 Simon Wright <simon@pushface.org>
+--  Copyright 1998-2014 Simon Wright <simon@pushface.org>
 
 --  This package is free software; you can redistribute it and/or
 --  modify it under terms of the GNU General Public License as
@@ -19,11 +19,6 @@
 --  executable to be covered by the GNU General Public License.  This
 --  exception does not however invalidate any other reasons why the
 --  executable file might be covered by the GNU Public License.
-
---  $RCSfile: bc-containers-collections.adb,v $
---  $Revision: 1.10.2.1 $
---  $Date: 2002/12/29 12:22:30 $
---  $Author: simon $
 
 with System;
 
@@ -75,18 +70,6 @@ package body BC.Containers.Collections is
    begin
       return Natural'Last;
    end Available;
-
-   procedure Lock (C : in out Abstract_Collection) is
-      pragma Warnings (Off, C);
-   begin
-      null;
-   end Lock;
-
-   procedure Unlock (C : in out Abstract_Collection) is
-      pragma Warnings (Off, C);
-   begin
-      null;
-   end Unlock;
 
    procedure Reset (It : in out Collection_Iterator) is
       C : Abstract_Collection'Class

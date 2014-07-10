@@ -1,5 +1,5 @@
 --  Copyright 1994 Grady Booch
---  Copyright 1998-2002 Simon Wright <simon@pushface.org>
+--  Copyright 1998-2014 Simon Wright <simon@pushface.org>
 
 --  This package is free software; you can redistribute it and/or
 --  modify it under terms of the GNU General Public License as
@@ -20,11 +20,6 @@
 --  exception does not however invalidate any other reasons why the
 --  executable file might be covered by the GNU Public License.
 
---  $RCSfile: bc-containers-collections-ordered-unbounded.ads,v $
---  $Revision: 1.8.2.1 $
---  $Date: 2002/12/29 12:22:42 $
---  $Author: simon $
-
 with BC.Support.Unbounded;
 with System.Storage_Pools;
 
@@ -32,7 +27,7 @@ generic
    Storage : in out System.Storage_Pools.Root_Storage_Pool'Class;
 package BC.Containers.Collections.Ordered.Unbounded is
 
-   pragma Elaborate_Body;
+   pragma Preelaborate;
 
    type Collection is new Abstract_Ordered_Collection with private;
 
@@ -44,20 +39,28 @@ package BC.Containers.Collections.Ordered.Unbounded is
    --  Empty the collection of all items.
 
    procedure Insert (C : in out Collection; Elem : Item);
-   --  Add the item to the collection, starting at the front.
+   --  Add the item to the collection, inserting the new item at the
+   --  appropriate position; if an equivalent item is found, the new
+   --  item is inserted before it.
 
    procedure Insert (C : in out Collection;
                      Elem : Item;
                      Before : Positive);
-   --  Add the item to the collection, starting at the front.
+   --  If the indicated item is equivalent to the new item, the new
+   --  item is inserted before the indicated item; otherwise, the
+   --  behaviour is as above.
 
    procedure Append (C : in out Collection; Elem : Item);
-   --  Add the item to the collection, starting at the end.
+   --  Add the item to the collection, inserting the new item at the
+   --  appropriate position; if any equivalent items are found, the
+   --  new item is inserted after all of them.
 
    procedure Append (C : in out Collection;
                      Elem : Item;
                      After : Positive);
-   --  Add the item to the collection, starting at the end.
+   --  If the indicated item is equivalent to the new item, the new
+   --  item is inserted after the indicated item; otherwise, the
+   --  behaviour is as above.
 
    procedure Remove (C : in out Collection; At_Index : Positive);
    --  Remove the item at the given index in the collection.
@@ -65,7 +68,15 @@ package BC.Containers.Collections.Ordered.Unbounded is
    procedure Replace (C : in out Collection;
                       At_Index : Positive;
                       Elem : Item);
-   --  Replace the item at the given index with the given item.
+   --  If the indicated item is equivalent to the new item, it is
+   --  replaced directly.
+   --
+   --  If the new item is "<" the indicated item, the indicated item
+   --  is removed and the new item is Appended, as above. If the
+   --  indicated item is "<" the new item, the indicated item is
+   --  removed and the new item is Inserted, as above. The effect is
+   --  that the new item moves toward the appropriate end of the
+   --  Collection but not beyond any equivalent items.
 
    function Length (C : Collection) return Natural;
    --  Return the number of items in the collection.

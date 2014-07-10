@@ -1,4 +1,4 @@
---  Copyright 2001 Simon Wright <simon@pushface.org>
+--  Copyright 2001-2014 Simon Wright <simon@pushface.org>
 
 --  This package is free software; you can redistribute it and/or
 --  modify it under terms of the GNU General Public License as
@@ -18,11 +18,6 @@
 --  executable to be covered by the GNU General Public License.  This
 --  exception does not however invalidate any other reasons why the
 --  executable file might be covered by the GNU Public License.
-
---  $RCSfile: bc-support-standard_storage.ads,v $
---  $Revision: 1.3.2.1 $
---  $Date: 2002/12/26 14:48:18 $
---  $Author: simon $
 
 with System.Storage_Pools;
 

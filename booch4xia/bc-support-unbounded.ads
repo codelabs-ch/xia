@@ -1,6 +1,6 @@
 --  Copyright 1994 Grady Booch
 --  Copyright 1994-1997 David Weller
---  Copyright 1998-2002 Simon Wright <simon@pushface.org>
+--  Copyright 1998-2014 Simon Wright <simon@pushface.org>
 
 --  This package is free software; you can redistribute it and/or
 --  modify it under terms of the GNU General Public License as
@@ -21,11 +21,6 @@
 --  exception does not however invalidate any other reasons why the
 --  executable file might be covered by the GNU Public License.
 
---  $RCSfile: bc-support-unbounded.ads,v $
---  $Revision: 1.15.2.1 $
---  $Date: 2002/12/26 14:48:24 $
---  $Author: simon $
-
 with Ada.Finalization;
 with Ada.Streams;
 with System.Storage_Pools;
@@ -37,7 +32,7 @@ generic
    Storage : in out System.Storage_Pools.Root_Storage_Pool'Class;
 package BC.Support.Unbounded is
 
-   pragma Elaborate_Body;
+   pragma Preelaborate;
 
    type Unb_Node is private;
    --  An unpacked container whose items are stored on the heap.

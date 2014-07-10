@@ -1,5 +1,5 @@
 --  Copyright 1994 Grady Booch
---  Copyright 1998-2002 Simon Wright <simon@pushface.org>
+--  Copyright 1998-2014 Simon Wright <simon@pushface.org>
 
 --  This package is free software; you can redistribute it and/or
 --  modify it under terms of the GNU General Public License as
@@ -20,59 +20,7 @@
 --  exception does not however invalidate any other reasons why the
 --  executable file might be covered by the GNU Public License.
 
---  $RCSfile: bc-support-exceptions.adb,v $
---  $Revision: 1.5.2.1 $
---  $Date: 2002/12/26 14:48:10 $
---  $Author: simon $
-
 package body BC.Support.Exceptions is
-
-
-   function Reason_Message (For_The_Reason : Reason) return String;
-
-   function Reason_Message (For_The_Reason : Reason) return String is
-   begin
-      case For_The_Reason is
-         when No_Reason_Given => return "";
-         when Disjoint => return "objects are members of different structures";
-         when Duplicate => return "object already exists";
-         when Empty => return "object is empty";
-         when Full => return "object is full";
-         when Illegal => return "illegal pattern";
-         when Invalid_Index => return "index is out of range";
-         when Invalid_Number => return "string does not denote a valid number";
-         when Missing => return "object does not exist";
-         when Not_Empty => return "object is not empty";
-         when Not_Root => return "object is not at root of structure";
-         when Is_Null => return "object is null";
-         when Out_Of_Memory => return "storage requested not available";
-         when Referenced =>
-            return "object is referenced and cannot be destroyed";
-         when Timing => return "possible race condition";
-         when Too_Large => return "object is too large";
-         when Too_Small => return "object is too small";
-      end case;
-   end Reason_Message;
-
-
-   procedure Assert (Condition : Boolean;
-                     Raising_If_False : Ada.Exceptions.Exception_Id;
-                     From_Subprogram : String;
-                     With_Reason : Reason := No_Reason_Given) is
-   begin
-      if not Condition then
-         if With_Reason = No_Reason_Given then
-            Ada.Exceptions.Raise_Exception
-              (Raising_If_False,
-               Module & "." & From_Subprogram);
-         else
-            Ada.Exceptions.Raise_Exception
-              (Raising_If_False,
-               Module & "." & From_Subprogram & ": "
-               & Reason_Message (With_Reason));
-         end if;
-      end if;
-   end Assert;
 
 
    procedure Report

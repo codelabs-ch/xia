@@ -1,5 +1,5 @@
 --  Copyright 1994 Grady Booch
---  Copyright 1998-2002 Simon Wright <simon@pushface.org>
+--  Copyright 1998-2014 Simon Wright <simon@pushface.org>
 
 --  This package is free software; you can redistribute it and/or
 --  modify it under terms of the GNU General Public License as
@@ -20,19 +20,9 @@
 --  exception does not however invalidate any other reasons why the
 --  executable file might be covered by the GNU Public License.
 
---  $RCSfile: bc-containers-sets-unbounded.adb,v $
---  $Revision: 1.10.2.4 $
---  $Date: 2002/12/29 16:41:51 $
---  $Author: simon $
-
-with BC.Support.Exceptions;
 with System.Address_To_Access_Conversions;
 
 package body BC.Containers.Sets.Unbounded is
-
-   package BSE renames BC.Support.Exceptions;
-   procedure Assert
-   is new BSE.Assert ("BC.Containers.Sets.Unbounded");
 
    procedure Clear (S : in out Unconstrained_Set) is
    begin
@@ -46,7 +36,7 @@ package body BC.Containers.Sets.Unbounded is
       if Tables.Is_Bound (S.Rep, I) then
          Added := False;
       else
-         Tables.Bind (S.Rep, I, True);
+         Tables.Bind (S.Rep, I, (null record));
          Added := True;
       end if;
    end Add;
@@ -54,16 +44,12 @@ package body BC.Containers.Sets.Unbounded is
    procedure Add (S : in out Unconstrained_Set; I : Item) is
    begin
       if not Tables.Is_Bound (S.Rep, I) then
-         Tables.Bind (S.Rep, I, True);
+         Tables.Bind (S.Rep, I, (null record));
       end if;
    end Add;
 
    procedure Remove (S : in out Unconstrained_Set; I : Item) is
    begin
-      Assert (Tables.Is_Bound (S.Rep, I),
-              BC.Not_Found'Identity,
-              "Remove",
-              BSE.Missing);
       Tables.Unbind (S.Rep, I);
    end Remove;
 
@@ -90,17 +76,16 @@ package body BC.Containers.Sets.Unbounded is
       Result : Unbounded_Set_Iterator;
    begin
       Result.For_The_Container :=
-        Address_Conversions.To_Pointer (For_The_Set'Address).all'Access;
+        Container_Ptr (Address_Conversions.To_Pointer (For_The_Set'Address));
       Reset (Result);
       return Result;
    end New_Iterator;
 
    --  Null containers
 
-   Empty_Container : Set;
-   pragma Warnings (Off, Empty_Container);
-
    function Null_Container return Unconstrained_Set is
+      Empty_Container : Set;
+      pragma Warnings (Off, Empty_Container);
    begin
       return Empty_Container;
    end Null_Container;

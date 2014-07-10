@@ -1,5 +1,5 @@
 --  Copyright 1994 Grady Booch
---  Copyright 1998-2002 Simon Wright <simon@pushface.org>
+--  Copyright 1998-2014 Simon Wright <simon@pushface.org>
 
 --  This package is free software; you can redistribute it and/or
 --  modify it under terms of the GNU General Public License as
@@ -20,15 +20,10 @@
 --  exception does not however invalidate any other reasons why the
 --  executable file might be covered by the GNU Public License.
 
---  $RCSfile: bc-containers-collections.ads,v $
---  $Revision: 1.9.2.1 $
---  $Date: 2002/12/29 12:22:31 $
---  $Author: simon $
-
 generic
 package BC.Containers.Collections is
 
-   pragma Elaborate_Body;
+   pragma Preelaborate;
 
    type Abstract_Collection is abstract new Container with private;
 
@@ -40,7 +35,7 @@ package BC.Containers.Collections is
    --  Return True if and only if both collections have the same
    --  extent and the same items in the same order; return False
    --  otherwise.  Can't call this "=" because of the standard one for
-   --  Collection.
+   --  Abstract_Collection.
 
    procedure Copy (From : Abstract_Collection'Class;
                    To : in out Abstract_Collection'Class);
@@ -54,7 +49,8 @@ package BC.Containers.Collections is
    --  Add the item to the front of the collection.
 
    procedure Insert (C : in out Abstract_Collection;
-                     Elem : Item; Before : Positive) is abstract;
+                     Elem : Item;
+                     Before : Positive) is abstract;
    --  Add the item before the given index item in the collection; if
    --  before is 1, the item is added to the front of the collection.
 
@@ -103,10 +99,6 @@ package BC.Containers.Collections is
 private
 
    type Abstract_Collection is abstract new Container with null record;
-
-   procedure Lock (C : in out Abstract_Collection);
-
-   procedure Unlock (C : in out Abstract_Collection);
 
    type Collection_Iterator is new Iterator with record
       Index : Natural;

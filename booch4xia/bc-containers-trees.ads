@@ -1,6 +1,6 @@
 --  Copyright 1994 Grady Booch
 --  Copyright 1994-1997 David Weller
---  Copyright 1998-2002 Simon Wright <simon@pushface.org>
+--  Copyright 1998-2014 Simon Wright <simon@pushface.org>
 
 --  This package is free software; you can redistribute it and/or
 --  modify it under terms of the GNU General Public License as
@@ -21,12 +21,9 @@
 --  exception does not however invalidate any other reasons why the
 --  executable file might be covered by the GNU Public License.
 
---  $RCSfile: bc-containers-trees.ads,v $
---  $Revision: 1.9.2.1 $
---  $Date: 2002/12/29 16:42:01 $
---  $Author: simon $
-
 generic package BC.Containers.Trees is
+
+   pragma Preelaborate;
 
    --  A binary tree is a rooted collection of nodes and arcs, where
    --  each node has two children and where arcs may not have cycles

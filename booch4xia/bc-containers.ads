@@ -1,6 +1,7 @@
 --  Copyright 1994 Grady Booch
 --  Copyright 1994-1997 David Weller
---  Copyright 1998-2002 Simon Wright <simon@pushface.org>
+--  Copyright 1998-2014 Simon Wright <simon@pushface.org>
+--  Copyright 2005 Martin Krischik
 
 --  This package is free software; you can redistribute it and/or
 --  modify it under terms of the GNU General Public License as
@@ -21,19 +22,12 @@
 --  exception does not however invalidate any other reasons why the
 --  executable file might be covered by the GNU Public License.
 
---  $RCSfile: bc-containers.ads,v $
---  $Revision: 1.17.2.2 $
---  $Date: 2002/12/26 11:43:52 $
---  $Author: simon $
-
-with Ada.Finalization;
-
 generic
    type Item is private;
    with function "=" (L, R : Item) return Boolean is <>;
 package BC.Containers is
 
-   pragma Elaborate_Body;
+   pragma Preelaborate;
 
    --  This package specifies the common protocol of all Container
    --  classes. This common protocol consists of Iterators.
@@ -80,7 +74,7 @@ package BC.Containers is
    --  if Apply sets OK to False.
 
    generic
-      type Param_Type is private;
+      type Param_Type (<>) is limited private;
       with procedure Apply (Elem : in Item;
                             Param : in Param_Type;
                             OK : out Boolean);
@@ -91,7 +85,7 @@ package BC.Containers is
    --  early if Apply sets OK to False.
 
    generic
-      type Param_Type is private;
+      type Param_Type (<>) is limited private;
       with procedure Apply (Elem : in Item;
                             Param : in out Param_Type;
                             OK : out Boolean);
@@ -109,7 +103,7 @@ package BC.Containers is
    --  if Apply sets OK to False.
 
    generic
-      type Param_Type is private;
+      type Param_Type (<>) is limited private;
       with procedure Apply (Elem : in out Item;
                             Param : in Param_Type;
                             OK : out Boolean);
@@ -120,7 +114,7 @@ package BC.Containers is
    --  if Apply sets OK to False.
 
    generic
-      type Param_Type is private;
+      type Param_Type (<>) is limited private;
       with procedure Apply (Elem : in out Item;
                             Param : in out Param_Type;
                             OK : out Boolean);
@@ -132,21 +126,18 @@ package BC.Containers is
 
 private
 
+   --  Suppress "unreferenced" warnings here (GNAT 5.02). Can't use
+   --  pragma Unreferenced, because then we get warnings in child
+   --  packages.
+   pragma Warnings (Off, "=");
+
    --  We need access to Items; but we must make sure that no actual
    --  allocations occur using this type.
 
    type Item_Ptr is access all Item;
    for Item_Ptr'Storage_Size use 0;
 
-   type Container is abstract new Ada.Finalization.Controlled with null record;
-
-   --  Support for concurrency protection. The base implementation of
-   --  these procedures does nothing; derived types override as
-   --  required.
-
-   procedure Lock (C : in out Container);
-
-   procedure Unlock (C : in out Container);
+   type Container is abstract tagged null record;
 
    --  Private primitive operations of Container.  These should
    --  ideally be abstract; instead, we provide implementations, but

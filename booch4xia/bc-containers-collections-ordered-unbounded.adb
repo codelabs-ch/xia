@@ -1,5 +1,5 @@
 --  Copyright 1994 Grady Booch
---  Copyright 1998-2002 Simon Wright <simon@pushface.org>
+--  Copyright 1998-2014 Simon Wright <simon@pushface.org>
 
 --  This package is free software; you can redistribute it and/or
 --  modify it under terms of the GNU General Public License as
@@ -20,11 +20,6 @@
 --  exception does not however invalidate any other reasons why the
 --  executable file might be covered by the GNU Public License.
 
---  $RCSfile: bc-containers-collections-ordered-unbounded.adb,v $
---  $Revision: 1.8.2.1 $
---  $Date: 2002/12/29 12:22:41 $
---  $Author: simon $
-
 with System.Address_To_Access_Conversions;
 
 package body BC.Containers.Collections.Ordered.Unbounded is
@@ -44,8 +39,7 @@ package body BC.Containers.Collections.Ordered.Unbounded is
    begin
       for Index in 1 .. Collection_Nodes.Length (C.Rep)
       loop
-         if not (Collection_Nodes.Item_At (C.Rep, Index)
-                 < Elem) then
+         if not (Collection_Nodes.Item_At (C.Rep, Index) < Elem) then
             Collection_Nodes.Insert (C.Rep, Elem, Index);
             return;
          end if;
@@ -56,17 +50,17 @@ package body BC.Containers.Collections.Ordered.Unbounded is
    procedure Insert (C : in out Collection;
                      Elem : Item;
                      Before : Positive) is
-      pragma Warnings (Off, Before);
+      Current : constant Item := Item_At (C, Before);
+      --  May raise Range_Error.
    begin
-      for Index in 1 .. Collection_Nodes.Length (C.Rep)
-      loop
-         if not (Collection_Nodes.Item_At (C.Rep, Index)
-                 < Elem) then
-            Collection_Nodes.Insert (C.Rep, Elem, Index);
-            return;
-         end if;
-      end loop;
-      Collection_Nodes.Append (C.Rep, Elem);
+      if Elem < Current or else Current < Elem then
+         --  Values not equal; Insert sortedly.
+         Insert (C, Elem);
+      else
+         --  Values are equal (presumably), so Insert in the specified
+         --  place.
+         Collection_Nodes.Insert (C.Rep, Before => Before, Elem => Elem);
+      end if;
    end Insert;
 
    procedure Append (C : in out Collection; Elem : Item) is
@@ -84,16 +78,17 @@ package body BC.Containers.Collections.Ordered.Unbounded is
    procedure Append (C : in out Collection;
                      Elem : Item;
                      After : Positive) is
-      pragma Warnings (Off, After);
+      Current : constant Item := Item_At (C, After);
+      --  May raise Range_Error.
    begin
-      for Index in 1 .. Collection_Nodes.Length (C.Rep)
-      loop
-         if Elem < Collection_Nodes.Item_At (C.Rep, Index) then
-            Collection_Nodes.Insert (C.Rep, Elem, Index);
-            return;
-         end if;
-      end loop;
-      Collection_Nodes.Append (C.Rep, Elem);
+      if Elem < Current or else Current < Elem then
+         --  Values not equal; Append sortedly.
+         Append (C, Elem);
+      else
+         --  Values are equal (presumably), so Append in the specified
+         --  place.
+         Collection_Nodes.Append (C.Rep, After => After, Elem => Elem);
+      end if;
    end Append;
 
    procedure Remove (C : in out Collection; At_Index : Positive) is
@@ -104,9 +99,20 @@ package body BC.Containers.Collections.Ordered.Unbounded is
    procedure Replace (C : in out Collection;
                       At_Index : Positive;
                       Elem : Item) is
+      Current : constant Item := Item_At (C, At_Index);
    begin
-      Collection_Nodes.Remove (C.Rep, At_Index);
-      Insert (C, Elem);
+      if Elem < Current then
+         --  Elem goes after any 'equal' Item; the same as an Append.
+         Remove (C, At_Index);
+         Append (C, Elem);
+      elsif Current < Elem then
+         --  Elem goes before any 'equal' Item; the same as an Insert.
+         Remove (C, At_Index);
+         Insert (C, Elem);
+      else
+         --  Values are equal (presumably), so replace in situ.
+         Collection_Nodes.Replace (C.Rep, Index => At_Index, Elem => Elem);
+      end if;
    end Replace;
 
    function Length (C : Collection) return Natural is
@@ -147,7 +153,8 @@ package body BC.Containers.Collections.Ordered.Unbounded is
       Result : Collection_Iterator;
    begin
       Result.For_The_Container :=
-        Address_Conversions.To_Pointer (For_The_Collection'Address).all'Access;
+        Container_Ptr (Address_Conversions.To_Pointer
+                         (For_The_Collection'Address));
       Reset (Result);
       return Result;
    end New_Iterator;
@@ -157,10 +164,9 @@ package body BC.Containers.Collections.Ordered.Unbounded is
       return Collection_Nodes.Item_At (C.Rep, Index);
    end Item_At;
 
-   Empty_Container : Collection;
-   pragma Warnings (Off, Empty_Container);
-
    function Null_Container return Collection is
+      Empty_Container : Collection;
+      pragma Warnings (Off, Empty_Container);
    begin
       return Empty_Container;
    end Null_Container;

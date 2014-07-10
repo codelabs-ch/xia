@@ -1,6 +1,6 @@
 --  Copyright 1994 Grady Booch
 --  Copyright 1994-1997 David Weller
---  Copyright 1998-2002 Simon Wright <simon@pushface.org>
+--  Copyright 1998-2014 Simon Wright <simon@pushface.org>
 
 --  This package is free software; you can redistribute it and/or
 --  modify it under terms of the GNU General Public License as
@@ -21,9 +21,8 @@
 --  exception does not however invalidate any other reasons why the
 --  executable file might be covered by the GNU Public License.
 
---  $RCSfile: bc-support.ads,v $
---  $Revision: 1.5.2.1 $
---  $Date: 2002/12/26 14:48:03 $
---  $Author: simon $
+package BC.Support is
 
-package BC.Support is end BC.Support;
+   pragma Pure;
+
+end BC.Support;
