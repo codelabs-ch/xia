@@ -703,6 +703,7 @@ package body Mckae.XML.XPath.XIA is
 
       Xpath_Nodes := Sorted_Results;
 
+      Destroy (Node_Sorter.Key);
       Clear_Nodes (Sorting_Tree);
    end Finalize_Matchings;
 
