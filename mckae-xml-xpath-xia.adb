@@ -650,6 +650,7 @@ package body Mckae.XML.XPath.XIA is
       Empty_Node_List : Node_List;
 
    begin
+      Destroy (Node_Key);
       Sorted_Results := Empty_Node_List;
 
       -- Perform a tree insertion sort of all the nodes
