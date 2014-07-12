@@ -53,6 +53,7 @@ package body Mckae.XML.XPath.Query_Handling is
       Locations.Reset_For_Parsing;
       Xia_Parser_Model.Pathify(parse_tree.all);
 
+      Query_Handling.Free (Location_Path => Path);
       Path := Locations.Get_Path;
 
       Path.Absolute := Xpath_Query(Xpath_Query'First) = '/';

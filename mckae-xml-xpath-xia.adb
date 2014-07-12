@@ -561,6 +561,7 @@ package body Mckae.XML.XPath.XIA is
       Location_Steps : Location_Paths;
 
    begin
+      Free (Location_Steps);
       -- Split up the location path into discrete steps
       Location_Steps := Query_Handling.Pathify(Query);
 
