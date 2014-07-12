@@ -617,6 +617,20 @@ package body Mckae.XML.XPath.XIA is
 
    -------------------------------------------------------------------
 
+   procedure Clear_Node
+     (Elem : in out Node_Sets.Sortable_Matches;
+      Ok   :    out Boolean)
+   is
+   begin
+      Destroy (Elem.Key);
+      Ok := True;
+   end Clear_Node;
+
+   procedure Clear_Nodes is new
+     Node_Sets.Sortable_Matching_Tree.Modify (Clear_Node);
+
+   -------------------------------------------------------------------
+
    procedure Finalize_Matchings (Matchings   : in     Node_Sets.Set;
                                  Xpath_Nodes :    out Node_List) is
 
@@ -687,6 +701,8 @@ package body Mckae.XML.XPath.XIA is
       Output_Nodes(Sorting_Tree);
 
       Xpath_Nodes := Sorted_Results;
+
+      Clear_Nodes (Sorting_Tree);
    end Finalize_Matchings;
 
    -------------------------------------------------------------------
