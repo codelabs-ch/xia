@@ -19,6 +19,7 @@ prefix ?= $(realpath $(dir $(shell which gnatls))..)
 debian = $(and $(wildcard /etc/debian_version),$(filter $(prefix),/usr))
 GPR_INSTALL_SUBDIR = $(if $(debian),share/ada/adainclude,lib/gnat)
 
+NUM_CPUS ?= 1
 GPRBUILD ?= gprbuild
 GPRCLEAN ?= gprclean
 
@@ -34,11 +35,11 @@ libs:: lib-static-stamp
 #libs:: lib-relocatable-stamp
 
 lib-static-stamp: force
-	$(GPRBUILD) -p -P XIA -XLIBRARY_TYPE=static
+	$(GPRBUILD) -p -j$(NUM_CPUS) -P XIA -XLIBRARY_TYPE=static
 	touch $@
 
 lib-relocatable-stamp: force
-	$(GPRBUILD) -p -P XIA -XLIBRARY_TYPE=relocatable
+	$(GPRBUILD) -p -j$(NUM_CPUS) -P XIA -XLIBRARY_TYPE=relocatable
 	touch $@
 
 install:: install-static
