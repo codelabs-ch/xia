@@ -32,8 +32,8 @@ with Ada.Strings.Unbounded;
 use  Ada.Strings.Unbounded;
 with Ada.Tags;
 
-with Dom.Core.Append_Node;
-with Dom.Core.Nodes;
+with DOM.Core.Append_Node;
+with DOM.Core.Nodes;
 
 with McKae.XML.XPath.Expressions;
 with Mckae.XML.XPath.Locations;
@@ -84,12 +84,12 @@ package body xia_parser_Model is
 
    ----------------------------------------------------------
 
-   function Is_In (N  : Dom.Core.Node;
-                   Nl : Dom.Core.Node_List) return Boolean is
-      use type Dom.Core.Node;
+   function Is_In (N  : DOM.Core.Node;
+                   Nl : DOM.Core.Node_List) return Boolean is
+      use type DOM.Core.Node;
    begin
-      for I in 0 .. Dom.Core.Nodes.Length(Nl) - 1 loop
-         if N = Dom.Core.Nodes.Item(Nl, I) then
+      for I in 0 .. DOM.Core.Nodes.Length(Nl) - 1 loop
+         if N = DOM.Core.Nodes.Item(Nl, I) then
             return True;
          end if;
       end loop;
@@ -1312,7 +1312,7 @@ package body xia_parser_Model is
    procedure Evaluate (This         : in  Location_Path_Nonterminal1;
                        Context_Node : in     Node_Items;
                        Value        :    out Expression_Values) is
-      Predicate_Path_Nodes : Dom.Core.Node_List;
+      Predicate_Path_Nodes : DOM.Core.Node_List;
    begin
       Value := (As_Expr_Text, Null_Unbounded_String);
       Evaluate(This.Relative_Location_Path_Part.all, Context_Node, Value);
@@ -1327,7 +1327,7 @@ package body xia_parser_Model is
    procedure Evaluate (This         : in  Location_Path_Nonterminal2;
                        Context_Node : in     Node_Items;
                        Value        :    out Expression_Values) is
-      Predicate_Path_Nodes : Dom.Core.Node_List;
+      Predicate_Path_Nodes : DOM.Core.Node_List;
    begin
       Value := (As_Expr_Text, Null_Unbounded_String);
       Evaluate(This.Absolute_Location_Path_Part.all, Context_Node, Value);
@@ -2216,9 +2216,9 @@ package body xia_parser_Model is
 
          -- Still here?  Okay, merge the two sets.
          Value := Op1;
-         for I in 0 .. Dom.Core.Nodes.Length(Op2.Ns) - 1 loop
-            if not Is_In(Dom.Core.Nodes.Item(Op2.Ns, I), Value.Ns) then
-               Dom.Core.Append_Node(Value.Ns, Dom.Core.Nodes.Item(Op2.Ns, I));
+         for I in 0 .. DOM.Core.Nodes.Length(Op2.Ns) - 1 loop
+            if not Is_In(DOM.Core.Nodes.Item(Op2.Ns, I), Value.Ns) then
+               DOM.Core.Append_Node(Value.Ns, DOM.Core.Nodes.Item(Op2.Ns, I));
             end if;
          end loop;
       end if;

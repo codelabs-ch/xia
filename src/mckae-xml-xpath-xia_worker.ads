@@ -37,18 +37,18 @@
 ----------------------------------------------------------------------
 
 
-with Dom.Core;
+with DOM.Core;
 
 package Mckae.XML.XPath.XIA_Worker is
 
    function XPath_Query
-     (N     : Dom.Core.Node;
+     (N     : DOM.Core.Node;
       -- A node in the XML tree against which the XPath query is
       --  submitted.
 
       XPath : String
       -- The XPath query.
-     ) return Dom.Core.Node_List;
+     ) return DOM.Core.Node_List;
    -- Apply an XPath query, starting with the given node, in the case
    --  of a relative XPath query, or the document that contains the
    --  given node, otherwise.  Returns a list of nodes, which may be

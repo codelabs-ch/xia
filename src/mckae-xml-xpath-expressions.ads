@@ -30,13 +30,13 @@
 
 with Ada.Strings.Unbounded;
 use  Ada.Strings.Unbounded;
-with Dom.Core;
+with DOM.Core;
 
 package McKae.XML.XPath.Expressions is
 
    type Node_Items is
       record
-         N             : Dom.Core.Node;
+         N             : DOM.Core.Node;
          Node_Position : Natural := 0;
          Node_Set_Size : Natural := 0;
       end record;
@@ -71,7 +71,7 @@ package McKae.XML.XPath.Expressions is
             when As_Boolean =>
                B : Boolean := False;
             when As_Node_List =>
-               Ns: Dom.Core.Node_List;
+               Ns: DOM.Core.Node_List;
          end case;
       end record;
 

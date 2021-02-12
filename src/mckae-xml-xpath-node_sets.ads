@@ -30,8 +30,8 @@
 
 with Ada.Containers;
 
-with Dom.Core;
-use  Dom.Core;
+with DOM.Core;
+use  DOM.Core;
 
 with Mckae.XML.XPath.Locations;
 use  Mckae.XML.XPath.Locations;

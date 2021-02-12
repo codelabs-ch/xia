@@ -33,9 +33,9 @@ with Ada.Strings.Maps;
 with Ada.Calendar;
 use Ada.Calendar;
 
-with Dom.Core.Nodes;
+with DOM.Core.Nodes;
 with Mckae.XML.XPath.XIA;
-with Dom.Readers;
+with DOM.Readers;
 with Unicode.CES;
 
 --  with Dtraq.Client_Transport;
@@ -49,8 +49,8 @@ with Text_IO; use Text_IO;
 
 procedure Bench_Xpath is
 
-   use Dom;
-   use Dom.Core;
+   use DOM;
+   use DOM.Core;
    use Input_Sources;
    use Mckae.Xml.XPath.Locations;
    use Mckae.Xml.XPath.XIA;
@@ -58,7 +58,7 @@ procedure Bench_Xpath is
    use Ada.Strings.Maps;
 
 
-   XML_Source_Reader : Dom.Readers.Tree_Reader;
+   XML_Source_Reader : DOM.Readers.Tree_Reader;
    Queried_Nodes : Node_List;
    N             : Node;
 

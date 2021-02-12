@@ -30,9 +30,9 @@
 
 with Ada.Strings.Fixed;
 with Ada.Strings.Maps;
-with Dom.Core.Nodes;
+with DOM.Core.Nodes;
 with Mckae.XML.XPath.XIA;
-with Dom.Readers;
+with DOM.Readers;
 with Unicode.CES;
 
 --  with Dtraq.Client_Transport;
@@ -46,8 +46,8 @@ with Text_IO; use Text_IO;
 
 procedure Test_Xpath is
 
-   use Dom;
-   use Dom.Core;
+   use DOM;
+   use DOM.Core;
    use Input_Sources;
    use Mckae.Xml.XPath.Locations;
    use Mckae.Xml.XPath.XIA;
@@ -55,7 +55,7 @@ procedure Test_Xpath is
    use Ada.Strings.Maps;
 
 
-   XML_Source_Reader : Dom.Readers.Tree_Reader;
+   XML_Source_Reader : DOM.Readers.Tree_Reader;
    Queried_Nodes : Node_List;
    N             : Node;
    Child         : Node;
@@ -110,10 +110,10 @@ Commands:
       New_Line;
       begin
          Queried_Nodes := Xpath_Query(Readers.Get_Tree(XML_Source_Reader), S(1..L));
-         Put_Line("Number of nodes:" & Natural'Image(Dom.Core.Nodes.Length(Queried_Nodes)));
+         Put_Line("Number of nodes:" & Natural'Image(DOM.Core.Nodes.Length(Queried_Nodes)));
 
          for I in 0 .. Nodes.Length(Queried_Nodes) - 1 loop
-            N := Dom.Core.Nodes.Item(Queried_Nodes, I);
+            N := DOM.Core.Nodes.Item(Queried_Nodes, I);
 
             if N.Node_Type = Element_Node then
                Put("<");

@@ -34,9 +34,9 @@ use  Ada.Strings.Fixed;
 with Ada.Strings.Unbounded;
 use  Ada.Strings.Unbounded;
 
-with Dom.Core.Append_Node;
---with Dom.Core.Attrs;
-with Dom.Core.Nodes;
+with DOM.Core.Append_Node;
+--with DOM.Core.Attrs;
+with DOM.Core.Nodes;
 
 with Mckae.Xml.Xpath.Locations;
 use  Mckae.Xml.Xpath.Locations;
@@ -51,8 +51,8 @@ with XIA_Parser_Parser;
 package body Mckae.XML.XPath.XIA_Worker is
 
    use Ada.Strings;
-   use Dom.Core;
-   use Dom.Core.Nodes;
+   use DOM.Core;
+   use DOM.Core.Nodes;
 
    -------------------------------------------------------------------
 
@@ -617,7 +617,7 @@ package body Mckae.XML.XPath.XIA_Worker is
       procedure Output_Node (Position : in Sortable_Matching_Tree.Cursor)
       is
       begin
-         Dom.Core.Append_Node (Nodes,
+         DOM.Core.Append_Node (Nodes,
                                Sortable_Matching_Tree.Element (Position));
       end Output_Node;
    begin

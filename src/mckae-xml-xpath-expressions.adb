@@ -34,11 +34,11 @@ with Ada.Long_Float_Text_Io;
 use  Ada.Long_Float_Text_Io;
 with Ada.Strings.Maps;
 
-with Dom.Core.Attrs;
-with Dom.Core.Documents;
-with Dom.Core.Nodes;
-use  Dom.Core.Nodes;
-with Dom.Core.Append_Node;
+with DOM.Core.Attrs;
+with DOM.Core.Documents;
+with DOM.Core.Nodes;
+use  DOM.Core.Nodes;
+with DOM.Core.Append_Node;
 with Mckae.XML.XPath.XIA_Worker;
 
 package body Mckae.XML.XPath.Expressions is
@@ -64,9 +64,9 @@ package body Mckae.XML.XPath.Expressions is
 
    -- Create the string-value of the expression in accorance with its
    --  type.
-   function String_Value(N : Dom.Core.Node
+   function String_Value(N : DOM.Core.Node
                          -- Node for which to create the string-value
-                        ) return Dom.Core.DOM_String;
+                        ) return DOM.Core.DOM_String;
 
    ----------------------------------------------------------------------
 
@@ -537,7 +537,7 @@ package body Mckae.XML.XPath.Expressions is
    ----------------------------------------------------------
 
    function Scrub_String(Expr : Expression_Values)
-                        return Dom.Core.DOM_String is
+                        return DOM.Core.DOM_String is
 
       White_Space     : constant String := ' ' & Ascii.LF & Ascii.CR & ASCII.HT;
       White_Space_Set : constant Maps.Character_Set := Maps.To_Set(White_Space);
@@ -721,10 +721,10 @@ package body Mckae.XML.XPath.Expressions is
       use Ada.Characters.Handling;
       use DOM.Core;
 
-      Search_Lang : constant Dom.Core.DOM_String := To_Upper(To_String(Lang.S));
-      Lang_Query  : constant Dom.Core.DOM_String
+      Search_Lang : constant DOM.Core.DOM_String := To_Upper(To_String(Lang.S));
+      Lang_Query  : constant DOM.Core.DOM_String
         := "ancestor-or-self::*[@xml:lang][1]/@xml:lang";
-      Node_Set    : Dom.Core.Node_List;
+      Node_Set    : DOM.Core.Node_List;
       Result      : Boolean := False;
 
    begin
@@ -751,23 +751,23 @@ package body Mckae.XML.XPath.Expressions is
 
    ----------------------------------------------------------
 
-   function Extract_By_ID (N   : Dom.Core.Node;
+   function Extract_By_ID (N   : DOM.Core.Node;
                            Arg : Expression_Values)
                          return Expression_Values is
       Result       : Expression_Values(As_Node_List);
-      Owner_Doc    : Dom.Core.Document;
-      Node_With_Id : Dom.Core.Node;
+      Owner_Doc    : DOM.Core.Document;
+      Node_With_Id : DOM.Core.Node;
 
-      use type Dom.Core.Node;
+      use type DOM.Core.Node;
 
       -- By the way, this doesn't work.  At least as of XMLAda 1.0,
       --  because Get_Element_By_ID is not yet implemented.  Therefore
       --  this always returns an empty node-set.
    begin
       Owner_Doc := Owner_Document(N);
-      Node_With_Id := Dom.Core.Documents.Get_Element_By_ID(Owner_Doc, To_String(Arg.S));
+      Node_With_Id := DOM.Core.Documents.Get_Element_By_ID(Owner_Doc, To_String(Arg.S));
       if Node_With_Id /= null then
-         Dom.Core.Append_Node(Result.Ns, Node_With_ID);
+         DOM.Core.Append_Node(Result.Ns, Node_With_ID);
       end if;
       return Result;
    end Extract_By_ID;
@@ -780,7 +780,7 @@ package body Mckae.XML.XPath.Expressions is
       pragma Assert(Arg.Value_Type = As_Node_List);
 
       if Length(Arg.Ns) > 0 then
-         return (As_String, +Dom.Core.Nodes.Local_Name(Item(Arg.Ns, 0)));
+         return (As_String, +DOM.Core.Nodes.Local_Name(Item(Arg.Ns, 0)));
       else
          return (As_String, Null_Unbounded_String);
       end if;
@@ -794,7 +794,7 @@ package body Mckae.XML.XPath.Expressions is
       pragma Assert(Arg.Value_Type = As_Node_List);
 
       if Length(Arg.Ns) > 0 then
-         return (As_String, +Dom.Core.Nodes.Namespace_URI(Item(Arg.Ns, 0)));
+         return (As_String, +DOM.Core.Nodes.Namespace_URI(Item(Arg.Ns, 0)));
       else
          return (As_String, Null_Unbounded_String);
       end if;
@@ -808,7 +808,7 @@ package body Mckae.XML.XPath.Expressions is
       pragma Assert(Arg.Value_Type = As_Node_List);
 
       if Length(Arg.Ns) > 0 then
-         return (As_String, +(Dom.Core.Nodes.Node_Name(Item(Arg.Ns, 0))));
+         return (As_String, +(DOM.Core.Nodes.Node_Name(Item(Arg.Ns, 0))));
       else
          return (As_String, Null_Unbounded_String);
       end if;
@@ -823,7 +823,7 @@ package body Mckae.XML.XPath.Expressions is
 
       Evaluated : Boolean := False;
 
-      Working_Node_List : Dom.Core.Node_List;
+      Working_Node_List : DOM.Core.Node_List;
 
       Slice_Index       : Natural;
 
@@ -887,7 +887,7 @@ package body Mckae.XML.XPath.Expressions is
             elsif Function_Name = "local-name" then
                Check_Arg_Count(Args, 0, Evaluated, 1);
                if Args'Length = 0 then
-                  Dom.Core.Append_Node(Working_Node_List, Context_Node.N);
+                  DOM.Core.Append_Node(Working_Node_List, Context_Node.N);
                   Result := (As_Node_List, Working_Node_List);
                else
                   Coerce(Args(1), As_Node_List);
@@ -903,7 +903,7 @@ package body Mckae.XML.XPath.Expressions is
             elsif Function_Name = "number" then
                Check_Arg_Count(Args, 0, Evaluated, 1);
                if Args'Length = 0 then
-                  Dom.Core.Append_Node(Working_Node_List, Context_Node.N);
+                  DOM.Core.Append_Node(Working_Node_List, Context_Node.N);
                   Result := (As_Node_List, Working_Node_List);
                else
                   Coerce(Args(1), As_Number);
@@ -920,7 +920,7 @@ package body Mckae.XML.XPath.Expressions is
             elsif Function_Name = "namespace-uri" then
                Check_Arg_Count(Args, 0, Evaluated, 1);
                if Args'Length = 0 then
-                  Dom.Core.Append_Node(Working_Node_List, Context_Node.N);
+                  DOM.Core.Append_Node(Working_Node_List, Context_Node.N);
                   Result := (As_Node_List, Working_Node_List);
                else
                   Coerce(Args(1), As_Node_List);
@@ -929,7 +929,7 @@ package body Mckae.XML.XPath.Expressions is
             elsif Function_Name = "name" then
                Check_Arg_Count(Args, 0, Evaluated, 1);
                if Args'Length = 0 then
-                  Dom.Core.Append_Node(Working_Node_List, Context_Node.N);
+                  DOM.Core.Append_Node(Working_Node_List, Context_Node.N);
                   Result := (As_Node_List, Working_Node_List);
                else
                   Coerce(Args(1), As_Node_List);
@@ -954,7 +954,7 @@ package body Mckae.XML.XPath.Expressions is
             if Function_Name = "string" then
                Check_Arg_Count(Args, 0, Evaluated, 1);
                if Args'Length = 0 then
-                  Dom.Core.Append_Node(Working_Node_List, Context_Node.N);
+                  DOM.Core.Append_Node(Working_Node_List, Context_Node.N);
                   Result := (As_Node_List, Working_Node_List);
                else
                   Coerce(Args(1), As_String);
@@ -994,7 +994,7 @@ package body Mckae.XML.XPath.Expressions is
             elsif Function_Name = "string-length" then
                Check_Arg_Count(Args, 0, Evaluated, 1);
                if Args'Length = 0 then
-                  Dom.Core.Append_Node(Working_Node_List, Context_Node.N);
+                  DOM.Core.Append_Node(Working_Node_List, Context_Node.N);
                   Result := (As_Node_List, Working_Node_List);
                   Coerce(Result, As_String);
                else
@@ -1031,7 +1031,7 @@ package body Mckae.XML.XPath.Expressions is
 
    ----------------------------------------------------------
 
-   function Concat_Text_Nodes(Node_Set : Dom.Core.Node_List) return Dom.Core.DOM_String is
+   function Concat_Text_Nodes(Node_Set : DOM.Core.Node_List) return DOM.Core.DOM_String is
       Value    : Unbounded_String;
    begin
       for N in 0 .. Length(Node_Set) - 1 loop
@@ -1042,11 +1042,11 @@ package body Mckae.XML.XPath.Expressions is
 
    ----------------------------------------------------------
 
-   function String_Value(N : Dom.Core.Node
+   function String_Value(N : DOM.Core.Node
                          -- Node for which to create the string-value
-                        ) return Dom.Core.DOM_String
+                        ) return DOM.Core.DOM_String
    is
-      use Dom.Core;
+      use DOM.Core;
 
       Node_Set : Node_List;
 

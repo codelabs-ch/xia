@@ -29,7 +29,7 @@
 ------------------------------------------------------------------------
 
 -- Append a node to an XMLAda DOM node list
-procedure Dom.Core.Append_Node
+procedure DOM.Core.Append_Node
   (List : in out Node_List;
    -- list to which to append the node
 
