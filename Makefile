@@ -17,7 +17,7 @@ prefix ?= $(realpath $(dir $(shell which gnatls))..)
 
 # Work out where to install the GPR
 debian = $(and $(wildcard /etc/debian_version),$(filter $(prefix),/usr))
-GPR_INSTALL_SUBDIR = $(if $(debian),share/ada/adainclude,lib/gnat)
+GPR_INSTALL_SUBDIR ?= $(if $(debian),share/ada/adainclude,lib/gnat)
 
 NUM_CPUS ?= 1
 GPRBUILD ?= gprbuild
