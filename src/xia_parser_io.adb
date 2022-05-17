@@ -38,47 +38,20 @@ package body xia_parser_io is
    User_Input : Unbounded_String;
 
    procedure YY_INPUT(buf: out unbounded_character_array; result: out integer; max_size: in integer) is
-      --c : character;
-      i : integer := 1;
-      loc : integer := buf'first;
+      Input_Length : Natural := Ada.Strings.Unbounded.Length (User_Input);
+      Loop_Length : Natural := Natural'Max (0, Integer'Min (Input_Length, max_size));
    begin
-      --      if (is_open(user_input_file)) then
-      --        while ( i <= max_size ) loop
-      --           if (end_of_line(user_input_file)) then -- Ada ate our newline, put it back on the end.
-      --               buf(loc) := ASCII.LF;
-      --               skip_line(user_input_file, 1);
-      --           else
-      --             get(user_input_file, buf(loc));
-      --           end if;
-
-      --           loc := loc + 1;
-      --           i := i + 1;
-      --        end loop;
-      --      else
-      while ( i <= max_size ) loop
---           if (end_of_line) then -- Ada ate our newline, put it back on the end.
---              buf(loc) := ASCII.LF;
---              skip_line(1);
-
---           else
---              get(buf(loc));
-            Buf(Loc) := Element(User_Input, 1);
-            Delete(User_Input, 1, 1);
---           end if;
-
-         loc := loc + 1;
-         i := i + 1;
+      for I in 0 .. Loop_Length - 1 loop
+         Buf(Buf'First + I) := Element(User_Input, 1);
+         Delete(User_Input, 1, 1);
       end loop;
-      --    end if; -- for input file being standard input
+      result := Loop_Length;
 
-      result := i - 1;
-   exception
---      when END_ERROR =>
-      when Ada.Strings.INDEX_ERROR =>
-         result := i - 1;
-         -- when we hit EOF we need to set yy_eof_has_been_seen
+      if Loop_Length = Input_Length then
          yy_eof_has_been_seen := true;
+      end if;
    end YY_INPUT;
+
 
    -- yy_get_next_buffer - try to read in new buffer
    --
