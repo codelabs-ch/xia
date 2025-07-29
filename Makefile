@@ -20,6 +20,7 @@ debian = $(and $(wildcard /etc/debian_version),$(filter $(prefix),/usr))
 GPR_INSTALL_SUBDIR ?= $(if $(debian),share/ada/adainclude,lib/gnat)
 
 NUM_CPUS ?= 1
+GPRCONFIG ?= gprconfig
 GPRBUILD ?= gprbuild
 GPRCLEAN ?= gprclean
 
@@ -35,10 +36,12 @@ libs:: lib-static-stamp
 #libs:: lib-relocatable-stamp
 
 lib-static-stamp: force
+	$(GPRCONFIG) --config=ada --batch
 	$(GPRBUILD) -p -j$(NUM_CPUS) -P XIA -XLIBRARY_TYPE=static
 	touch $@
 
 lib-relocatable-stamp: force
+	$(GPRCONFIG) --config=ada --batch
 	$(GPRBUILD) -p -j$(NUM_CPUS) -P XIA -XLIBRARY_TYPE=relocatable
 	touch $@
 
