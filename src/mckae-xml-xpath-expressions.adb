@@ -326,8 +326,21 @@ package body Mckae.XML.XPath.Expressions is
       end if;
 
       --  If one of the expressions is a node list, ensure it's Expr1.
+      --  Swapping the operands requires mirroring the operator, e.g.
+      --  "5 < price" is equivalent to "price > 5".
       if Expr2.Value_Type = As_Node_List then
-         return Compare (Expr2, Expr1, Operator);
+         declare
+            Mirrored : constant array (Relational_Operators)
+              of Relational_Operators
+              := (Less_Than        => Greater_Than,
+                  Less_Or_Equal    => Greater_Or_Equal,
+                  Equal            => Equal,
+                  Not_Equal        => Not_Equal,
+                  Greater_Or_Equal => Less_Or_Equal,
+                  Greater_Than     => Less_Than);
+         begin
+            return Compare (Expr2, Expr1, Mirrored (Operator));
+         end;
       end if;
 
       if Expr1.Value_Type = As_Node_List then
