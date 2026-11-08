@@ -148,8 +148,11 @@ package body Mckae.XML.XPath.Expressions is
                      Replacement.F := 0.0;
                   end if;
                when As_Node_List =>
-                  Interim := Value;
-                  Coerce(Interim, As_String);
+                  if Length (Value.Ns) > 0 then
+                     Interim := (As_String, +String_Value (Item (Value.Ns, 0)));
+                  else
+                     Interim := (As_String, Null_Unbounded_String);
+                  end if;
                   Coerce(Interim, As_Number);
                   Replacement := Interim;
                when As_Expr_Text =>
@@ -179,6 +182,12 @@ package body Mckae.XML.XPath.Expressions is
                Replacement := Value;
             end if;
       end case;
+      --  The node list is not carried over into the replacement value, so
+      --  release it to avoid leaking the result of a nested query.
+      if Value.Value_Type = As_Node_List and then To_Type /= As_Node_List then
+         DOM.Core.Free (Value.Ns);
+      end if;
+
       Value := Replacement;
    end Coerce;
 
