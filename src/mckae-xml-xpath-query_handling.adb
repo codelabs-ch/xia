@@ -49,6 +49,8 @@ package body Mckae.XML.XPath.Query_Handling is
       Step : Locations.Location_Steps;
 
    begin
+      --  Do not leave a stale pointer behind if parsing fails.
+      Parse_Tree := null;
       xia_parser_parser.run(Xpath_Query);
       parse_tree := xia_parser_parser.get_parse_tree;
       Locations.Reset_For_Parsing;

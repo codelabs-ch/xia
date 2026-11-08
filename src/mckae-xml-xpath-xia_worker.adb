@@ -555,15 +555,40 @@ package body Mckae.XML.XPath.XIA_Worker is
       Query : String := Trim(XPath, Both);
 
       Location_Steps : Location_Paths;
-      Tree           : Xia_Parser_Model.Parseable_Ptr;
+      Tree           : Xia_Parser_Model.Parseable_Ptr := null;
+      Steps_Ready    : Boolean := False;
 
       use type Xia_Parser_Model.Parseable_Ptr;
-   begin
-      -- Split up the location path into discrete steps
-      Location_Steps := Query_Handling.Pathify(Query);
 
-      --  Save global parse tree for later cleanup: nested queries issued while
-      --  evaluating predicates may use/overwrite Query_Handling.Parse_Tree.
+      procedure Cleanup is
+      begin
+         if Steps_Ready then
+            Free(Location_Steps);
+            Steps_Ready := False;
+         end if;
+
+         if Tree /= null then
+            Xia_Parser_Model.Release (Tree.all);
+            Xia_Parser_Model.Free (Tree);
+            Tree := null;
+         end if;
+      end Cleanup;
+   begin
+      --  Split up the location path into discrete steps. Take ownership of
+      --  the global parse tree even if Pathify fails after parsing succeeded,
+      --  so that it is freed by Cleanup. It must be saved anyway since nested
+      --  queries issued while evaluating predicates may use/overwrite
+      --  Query_Handling.Parse_Tree.
+      begin
+         Location_Steps := Query_Handling.Pathify(Query);
+         Steps_Ready := True;
+      exception
+         when others =>
+            Tree := Query_Handling.Parse_Tree;
+            Query_Handling.Parse_Tree := null;
+            raise;
+      end;
+
       Tree := Query_Handling.Parse_Tree;
       Query_Handling.Parse_Tree := null;
 
@@ -573,16 +598,16 @@ package body Mckae.XML.XPath.XIA_Worker is
          exit when Matchings.Is_Empty;
       end loop;
 
-      Free(Location_Steps);
-
-      if Tree /= null then
-         Xia_Parser_Model.Release (Tree.all);
-         Xia_Parser_Model.Free (Tree);
-      end if;
+      Cleanup;
 
    exception
       when Query_Handling.Malformed_Query =>
+         Cleanup;
          raise Malformed_XPath;
+
+      when others =>
+         Cleanup;
+         raise;
    end Evaluate_Location_Path;
 
    -------------------------------------------------------------------
