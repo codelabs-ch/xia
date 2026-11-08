@@ -345,8 +345,9 @@ package body Mckae.XML.XPath.Expressions is
                         end if;
 
                      when As_Boolean =>
-                        E1 := Expr1;
-                        Coerce(E1, As_Boolean);
+                        --  Do not coerce a copy of Expr1 since it would free
+                        --  the node list which is being looped over.
+                        E1 := (As_Boolean, Length (Expr1.Ns) > 0);
                         if Check_Relation (Operator, Compare (E1, Expr2)) then
                            DOM.Core.Append_Node (Result.Ns, Item (Expr1.Ns, J));
                         end if;
