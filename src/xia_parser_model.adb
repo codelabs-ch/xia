@@ -50,6 +50,16 @@ package body xia_parser_Model is
 
    ----------------------------------------------------------
 
+   --  Release the node list of Value if present.
+   procedure Free_Node_List (Value : in out Expression_Values) is
+   begin
+      if Value.Value_Type = As_Node_List then
+         DOM.Core.Free (Value.Ns);
+      end if;
+   end Free_Node_List;
+
+   ----------------------------------------------------------
+
    Star : constant Unbounded_String := To_Unbounded_String("*");
 
    ----------------------------------------------------------
@@ -2114,6 +2124,8 @@ package body xia_parser_Model is
       Function_Name : Unbounded_String;
 
       Args : Argument_List := Evaluate_Arguments(This.Arguments_Part, Context_Node);
+
+      use type DOM.Core.Node_List;
    begin
       -- Just reach down and get the function name
       Function_Name :=
@@ -2122,6 +2134,16 @@ package body xia_parser_Model is
         NCName_Part.Token_String;
 
       Evaluate_Function(-Function_Name, Context_Node, Args, Value);
+
+      --  Release argument node lists unless the result is that very list.
+      for A in Args'Range loop
+         if Args (A).Value_Type = As_Node_List
+           and then not (Value.Value_Type = As_Node_List
+                         and then Value.Ns = Args (A).Ns)
+         then
+            DOM.Core.Free (Args (A).Ns);
+         end if;
+      end loop;
    end Evaluate;
 
    -------------
@@ -2387,6 +2409,8 @@ package body xia_parser_Model is
          Value.S := Op1.S & "=" & Op2.S;
       else
          Value := Expressions.Compare(Op1, Op2, Equal);
+         Free_Node_List (Op1);
+         Free_Node_List (Op2);
       end if;
    end Evaluate;
 
@@ -2407,6 +2431,8 @@ package body xia_parser_Model is
          Value.S := Op1.S & "!=" & Op2.S;
       else
          Value := Expressions.Compare(Op1, Op2, Not_Equal);
+         Free_Node_List (Op1);
+         Free_Node_List (Op2);
       end if;
    end Evaluate;
 
@@ -2437,6 +2463,8 @@ package body xia_parser_Model is
          Value.S := Op1.S & "<" & Op2.S;
       else
          Value := Expressions.Compare(Op1, Op2, Less_Than);
+         Free_Node_List (Op1);
+         Free_Node_List (Op2);
       end if;
    end Evaluate;
 
@@ -2456,6 +2484,8 @@ package body xia_parser_Model is
          Value.S := Op1.S & ">" & Op2.S;
       else
          Value := Expressions.Compare(Op1, Op2, Greater_Than);
+         Free_Node_List (Op1);
+         Free_Node_List (Op2);
       end if;
    end Evaluate;
 
@@ -2475,6 +2505,8 @@ package body xia_parser_Model is
          Value.S := Op1.S & "<=" & Op2.S;
       else
          Value := Expressions.Compare(Op1, Op2, Less_Or_Equal);
+         Free_Node_List (Op1);
+         Free_Node_List (Op2);
       end if;
    end Evaluate;
 
@@ -2494,6 +2526,8 @@ package body xia_parser_Model is
          Value.S := Op1.S & ">=" & Op2.S;
       else
          Value := Expressions.Compare(Op1, Op2, Greater_Or_Equal);
+         Free_Node_List (Op1);
+         Free_Node_List (Op2);
       end if;
    end Evaluate;
 
