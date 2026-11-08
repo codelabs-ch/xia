@@ -756,6 +756,7 @@ package body Mckae.XML.XPath.Expressions is
          end;
       end if;
 
+      Free (Node_Set);
       return Result;
    end Match_Lang;
 
@@ -1078,7 +1079,13 @@ package body Mckae.XML.XPath.Expressions is
             null;
       end case;
 
-      return Concat_Text_Nodes(Node_Set);
+      --  Release the node list returned by the nested query.
+      declare
+         Result : constant DOM.Core.DOM_String := Concat_Text_Nodes(Node_Set);
+      begin
+         Free (Node_Set);
+         return Result;
+      end;
 
    end String_Value;
 
