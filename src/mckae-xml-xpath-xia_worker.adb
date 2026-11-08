@@ -555,10 +555,17 @@ package body Mckae.XML.XPath.XIA_Worker is
       Query : String := Trim(XPath, Both);
 
       Location_Steps : Location_Paths;
+      Tree           : Xia_Parser_Model.Parseable_Ptr;
 
+      use type Xia_Parser_Model.Parseable_Ptr;
    begin
       -- Split up the location path into discrete steps
       Location_Steps := Query_Handling.Pathify(Query);
+
+      --  Save global parse tree for later cleanup: nested queries issued while
+      --  evaluating predicates may use/overwrite Query_Handling.Parse_Tree.
+      Tree := Query_Handling.Parse_Tree;
+      Query_Handling.Parse_Tree := null;
 
       for S in 1 .. Location_Steps.Steps loop
          Extract_Nodes(Location_Steps.Path(S), Matchings);
@@ -567,6 +574,11 @@ package body Mckae.XML.XPath.XIA_Worker is
       end loop;
 
       Free(Location_Steps);
+
+      if Tree /= null then
+         Xia_Parser_Model.Release (Tree.all);
+         Xia_Parser_Model.Free (Tree);
+      end if;
 
    exception
       when Query_Handling.Malformed_Query =>

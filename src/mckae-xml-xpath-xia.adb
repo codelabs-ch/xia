@@ -49,8 +49,6 @@ package body McKae.XML.XPath.XIA is
    begin
       Results := XIA_Worker.XPath_Query (N, XPath);
 
-      Query_Handling.Parse_Tree.Release;
-
       return Results;
 
    exception
