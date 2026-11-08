@@ -60,6 +60,20 @@ package body xia_parser_Model is
 
    ----------------------------------------------------------
 
+   --  Compare Op1 and Op2 and release their node lists afterwards. If the
+   --  comparison raises, the caller is responsible for releasing them.
+   procedure Compare_And_Release
+     (Op1, Op2 : in out Expression_Values;
+      Operator :        Relational_Operators;
+      Value    :    out Expression_Values) is
+   begin
+      Value := Expressions.Compare (Op1, Op2, Operator);
+      Free_Node_List (Op1);
+      Free_Node_List (Op2);
+   end Compare_And_Release;
+
+   ----------------------------------------------------------
+
    Star : constant Unbounded_String := To_Unbounded_String("*");
 
    ----------------------------------------------------------
@@ -2137,13 +2151,21 @@ package body xia_parser_Model is
 
       --  Release argument node lists unless the result is that very list.
       for A in Args'Range loop
-         if Args (A).Value_Type = As_Node_List
-           and then not (Value.Value_Type = As_Node_List
-                         and then Value.Ns = Args (A).Ns)
+         if not (Value.Value_Type = As_Node_List
+                 and then Args (A).Value_Type = As_Node_List
+                 and then Value.Ns = Args (A).Ns)
          then
-            DOM.Core.Free (Args (A).Ns);
+            Free_Node_List (Args (A));
          end if;
       end loop;
+
+   exception
+      when others =>
+         --  No result is produced, so release all argument node lists.
+         for A in Args'Range loop
+            Free_Node_List (Args (A));
+         end loop;
+         raise;
    end Evaluate;
 
    -------------
@@ -2236,14 +2258,24 @@ package body xia_parser_Model is
          Coerce(Op1, As_Node_List);
          Coerce(Op2, As_Node_List);
 
-         -- Still here?  Okay, merge the two sets.
+         -- Still here?  Okay, merge the two sets.  Value takes over the
+         -- node list of Op1 (appending may reallocate it), the nodes of
+         -- Op2 are copied, so its list is released.
          Value := Op1;
+         Op1 := (As_Boolean, False);
          for I in 0 .. DOM.Core.Nodes.Length(Op2.Ns) - 1 loop
             if not Is_In(DOM.Core.Nodes.Item(Op2.Ns, I), Value.Ns) then
                DOM.Core.Append_Node(Value.Ns, DOM.Core.Nodes.Item(Op2.Ns, I));
             end if;
          end loop;
+         Free_Node_List (Op2);
       end if;
+
+   exception
+      when others =>
+         Free_Node_List (Op1);
+         Free_Node_List (Op2);
+         raise;
    end Evaluate;
 
    -------------
@@ -2408,10 +2440,14 @@ package body xia_parser_Model is
       if Value.Value_Type = As_Expr_Text then
          Value.S := Op1.S & "=" & Op2.S;
       else
-         Value := Expressions.Compare(Op1, Op2, Equal);
+         Compare_And_Release (Op1, Op2, Equal, Value);
+      end if;
+
+   exception
+      when others =>
          Free_Node_List (Op1);
          Free_Node_List (Op2);
-      end if;
+         raise;
    end Evaluate;
 
    -------------
@@ -2430,10 +2466,14 @@ package body xia_parser_Model is
       if Value.Value_Type = As_Expr_Text then
          Value.S := Op1.S & "!=" & Op2.S;
       else
-         Value := Expressions.Compare(Op1, Op2, Not_Equal);
+         Compare_And_Release (Op1, Op2, Not_Equal, Value);
+      end if;
+
+   exception
+      when others =>
          Free_Node_List (Op1);
          Free_Node_List (Op2);
-      end if;
+         raise;
    end Evaluate;
 
    -------------
@@ -2462,10 +2502,14 @@ package body xia_parser_Model is
       if Value.Value_Type = As_Expr_Text then
          Value.S := Op1.S & "<" & Op2.S;
       else
-         Value := Expressions.Compare(Op1, Op2, Less_Than);
+         Compare_And_Release (Op1, Op2, Less_Than, Value);
+      end if;
+
+   exception
+      when others =>
          Free_Node_List (Op1);
          Free_Node_List (Op2);
-      end if;
+         raise;
    end Evaluate;
 
    -------------
@@ -2483,10 +2527,14 @@ package body xia_parser_Model is
       if Value.Value_Type = As_Expr_Text then
          Value.S := Op1.S & ">" & Op2.S;
       else
-         Value := Expressions.Compare(Op1, Op2, Greater_Than);
+         Compare_And_Release (Op1, Op2, Greater_Than, Value);
+      end if;
+
+   exception
+      when others =>
          Free_Node_List (Op1);
          Free_Node_List (Op2);
-      end if;
+         raise;
    end Evaluate;
 
    -------------
@@ -2504,10 +2552,14 @@ package body xia_parser_Model is
       if Value.Value_Type = As_Expr_Text then
          Value.S := Op1.S & "<=" & Op2.S;
       else
-         Value := Expressions.Compare(Op1, Op2, Less_Or_Equal);
+         Compare_And_Release (Op1, Op2, Less_Or_Equal, Value);
+      end if;
+
+   exception
+      when others =>
          Free_Node_List (Op1);
          Free_Node_List (Op2);
-      end if;
+         raise;
    end Evaluate;
 
    -------------
@@ -2525,10 +2577,14 @@ package body xia_parser_Model is
       if Value.Value_Type = As_Expr_Text then
          Value.S := Op1.S & ">=" & Op2.S;
       else
-         Value := Expressions.Compare(Op1, Op2, Greater_Or_Equal);
+         Compare_And_Release (Op1, Op2, Greater_Or_Equal, Value);
+      end if;
+
+   exception
+      when others =>
          Free_Node_List (Op1);
          Free_Node_List (Op2);
-      end if;
+         raise;
    end Evaluate;
 
    -------------
@@ -3837,6 +3893,11 @@ package body xia_parser_Model is
          return Evaluate_Arguments(Arguments_Nonterminal3(Arguments_Part.all).Arguments_Part,
                                    Context_Node) & Value;
       end if;
+
+   exception
+      when others =>
+         Free_Node_List (Value);
+         raise;
    end Evaluate_Arguments;
 
    ----------------------------------------------------------
